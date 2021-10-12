@@ -50,8 +50,10 @@ public class AgentFactory : MonoBehaviour
             case AgentType.DATA_SAVER:
                 string activitiesSString = File.ReadAllText(ACTIVITIES_H_PATH, Encoding.UTF8);
                 ActivityAgenda agendaSaver = JsonUtility.FromJson<ActivityAgenda>(activitiesSString);
+                agendaSaver.initializeActivities();
                 string sickActivitiesSString = File.ReadAllText(ACTIVITIES_S_PATH, Encoding.UTF8);
                 ActivityAgenda sickAgendaSaver = JsonUtility.FromJson<ActivityAgenda>(sickActivitiesSString);
+                sickAgendaSaver.initializeActivities();
                 float randPositionXSaver = Random.Range(world.getAnchorPoint().x, world.getAnchorPoint().x + world.getWorldWidth());
                 float randPositionYSaver = Random.Range(world.getAnchorPoint().y, world.getAnchorPoint().y + world.getWorldHeight());
                 GameObject agentSaver = GameObject.Instantiate(saverPrefab, new Vector2(randPositionXSaver, randPositionYSaver), Quaternion.Euler(0, 0, 0));

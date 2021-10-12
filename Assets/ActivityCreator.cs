@@ -295,7 +295,7 @@ public class ActivityCreator : MonoBehaviour
         exerciseSick.doPlaces.Add(BuildingType.GYM);
         exerciseSick.doPlaces.Add(BuildingType.PARK);
         float[] placesDistExerciseSick = { 0.5248f, 0.1418f, 0.3334f };
-        exerciseHealthy.distributionPlaces = placesDistExerciseSick;
+        exerciseSick.distributionPlaces = placesDistExerciseSick;
         //Constricciones de tiempo 
         exerciseSick.timeConstraints = new int[2] { 6, 20 };
         //Contador de ruido

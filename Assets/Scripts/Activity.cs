@@ -145,7 +145,7 @@ public class Activity
         cumSumPlaces[0] = 0;
         for(int i = 1; i < cumSumPlaces.Length; i++)
         {
-            cumSumPlaces[i] = cumSumPlaces[i - 1] + distributionPlaces[i - 1];
+            cumSumPlaces[i] = cumSumPlaces[i] + distributionPlaces[i - 1];
 
             if(diceThrow >= cumSumPlaces[i-1] && diceThrow <= cumSumPlaces[i])
             {

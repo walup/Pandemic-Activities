@@ -87,7 +87,6 @@ public class City : MonoBehaviour
             }
         }
 
-        
         for (int i = 0; i < bounds.size.x; i++)
         {
             for (int j = 0; j < bounds.size.y; j++)

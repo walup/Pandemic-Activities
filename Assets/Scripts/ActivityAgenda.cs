@@ -10,6 +10,15 @@ public class ActivityAgenda
     public List<Activity> activities;
 
 
+
+    public void initializeActivities()
+    {
+        for (int i = 0; i < activities.Count; i++)
+        {
+            activities[i].initializeActivity();
+        }
+    }
+
     public void randomizeActivities()
     {
         for(int i = 0; i < activities.Count; i++)

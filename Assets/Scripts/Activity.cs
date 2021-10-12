@@ -11,15 +11,150 @@ public class Activity
     public float duration;
     //Una lista de lugares donde se realiza
     public List<BuildingType> doPlaces;
+    //La distribución de probabilidad de los distintos lugares
+    public float[] distributionPlaces;
+
+    private int nStandardDeviationsForMaxValue = 3;
+    //Distribución de comportamiento de las personas (aquí se incorporará la información de la encuesta de actividades realizada)
+    public float[] frequencyValues;
+    public float[] frequencyDistribution;
+    public float frequencyBinSize;
+    public TimeRate frequencyTimeRate;
+
+
+    //Distribución de tiempos que invierten las personas realizando las actividades 
+    public float[] durationValues;
+    public float[] durationDistribution;
+    public float durationBinSize;
+
     //La probabilidad de realizarla
     public float probability;
     public float probabilityDelta;
     public float minProbabilityDelta;
     public float maxProbabilityDelta;
+
     //Cada cuanto debe realizarse si o si
     public float hourPeriodicity;
     public int[] timeConstraints;
     public int noiseCounter;
+
+
+    //En este método se van a inicializar 4 cosas acorde a las distribuciones de probabilidad:
+    //Delta de probabilidad de la actividad acorde a la frecuencia
+    //Máximo de delta de probabilidad ubicado a 2 desviaciones estándar
+    //Duración acorde a la distribución de duración de las actividades
+    //La probabilidad inicial (esta considerando que la simulación inicia a las 8 de la mañana)
+
+    public void initializeActivity()
+    {
+
+        StatisticCalculator statisticCalculator = new StatisticCalculator();
+
+
+        int nFreq = frequencyDistribution.Length;
+        float[] cumSumFrequency = new float[nFreq + 1];
+        cumSumFrequency[0] = 0;
+        //Obtenemos la suma acumulada de la distribución de frecuencias
+        for (int i = 1; i < cumSumFrequency.Length; i++)
+        {
+            cumSumFrequency[i] = cumSumFrequency[i - 1] + frequencyDistribution[i - 1];
+        }
+
+        int nDuration = durationDistribution.Length;
+        float[] cumSumDuration = new float[nDuration + 1];
+        cumSumDuration[0] = 0;
+        //Obtenemos la suma acumulada de la distribución de duraciones
+        for (int i = 1; i < cumSumDuration.Length; i++)
+        {
+            cumSumDuration[i] = cumSumDuration[i - 1] + durationDistribution[i - 1];
+        }
+
+
+        //Ahora vamos con la duración de la actividad
+        float diceThrow = UnityEngine.Random.value;
+        float durationValue = 0;
+
+        for (int i = 1; i < cumSumDuration.Length; i++)
+        {
+            if (diceThrow <= cumSumDuration[i] && diceThrow >= cumSumDuration[i - 1])
+            {
+                float minValue = durationValues[i - 1] - durationBinSize / 2;
+                float maxValue = durationValues[i - 1] + durationBinSize / 2;
+
+                durationValue = minValue + (maxValue - minValue) * UnityEngine.Random.value;
+            }
+        }
+        duration = durationValue;
+
+        //Ahora vamos a obtener un valor de frecuencia acorde a la distribución 
+        diceThrow = UnityEngine.Random.value;
+        float valueFrequency = 0;
+        for (int i = 1; i < cumSumFrequency.Length; i++)
+        {
+            if(diceThrow >= cumSumFrequency[i-1] && diceThrow <= cumSumFrequency[i])
+            {
+                float minVal = frequencyValues[i - 1] - frequencyBinSize / 2;
+                float maxVal = frequencyValues[i - 1] + frequencyBinSize / 2;
+
+                valueFrequency = minVal + (maxVal - minVal) * UnityEngine.Random.value;
+                break;
+            }
+        }
+
+        //Con este valor de frecuencia vamos a asignar el delta de probabilidad
+        float stdDev = 0;
+        float mean = 0;
+        float timeRateFactor = 0;
+        switch (frequencyTimeRate)
+        {
+            case TimeRate.TIMES_PER_DAY:
+                timeRateFactor = 1 / 24.0f;
+                valueFrequency = valueFrequency*timeRateFactor;
+                stdDev = timeRateFactor* statisticCalculator.getStandardDeviation(frequencyValues, frequencyDistribution);
+                mean = timeRateFactor* statisticCalculator.getMeanDistribution(frequencyValues, frequencyDistribution);
+                setProbabilityDelta(valueFrequency, mean + nStandardDeviationsForMaxValue*stdDev);
+                break;
+            case TimeRate.TIMES_PER_WEEK:
+                timeRateFactor = 1 / (168.0f);
+                valueFrequency = valueFrequency*timeRateFactor;
+                stdDev = timeRateFactor* statisticCalculator.getStandardDeviation(frequencyValues, frequencyDistribution);
+                mean = timeRateFactor* statisticCalculator.getMeanDistribution(frequencyValues, frequencyDistribution);
+                setProbabilityDelta(valueFrequency, mean + nStandardDeviationsForMaxValue * stdDev);
+
+                break;
+            case TimeRate.TIMES_PER_MONTH:
+                timeRateFactor = 1 / (720.0f);
+                valueFrequency = valueFrequency*timeRateFactor;
+                stdDev = timeRateFactor* statisticCalculator.getStandardDeviation(frequencyValues, frequencyDistribution);
+                mean = timeRateFactor * statisticCalculator.getMeanDistribution(frequencyValues, frequencyDistribution);
+                setProbabilityDelta(valueFrequency, mean + nStandardDeviationsForMaxValue * stdDev);
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    //Regresa un tipo de edificio acorde a la distribución dada
+    public BuildingType getBuildingTypeAccordingToDistribution()
+    {
+        float diceThrow = UnityEngine.Random.value;
+        int nPlaceTypes = doPlaces.Count;
+
+        float[] cumSumPlaces = new float[nPlaceTypes + 1];
+        cumSumPlaces[0] = 0;
+        for(int i = 1; i < cumSumPlaces.Length; i++)
+        {
+            cumSumPlaces[i] = cumSumPlaces[i - 1] + distributionPlaces[i - 1];
+
+            if(diceThrow >= cumSumPlaces[i-1] && diceThrow <= cumSumPlaces[i])
+            {
+                return doPlaces[i - 1];
+            }
+        }
+        return doPlaces[0];
+    }
+
 
     public void setProbabilityDelta(float probDelta, float maxProbabilityDelta)
     {
@@ -33,6 +168,11 @@ public class Activity
         }
 
     }
+
+    //
+
+
+
 
     //Actualización de la probabilidad
     public void updateProbability()

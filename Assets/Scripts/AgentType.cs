@@ -5,7 +5,6 @@ using UnityEngine;
 public enum AgentType
 {
     //El tipo de persona que podemos tener
-    TYPE_A,
-    TYPE_B,
+    LIGHT_AGENT,
     DATA_SAVER
 }

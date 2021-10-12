@@ -61,11 +61,10 @@ public class ActivityStatus : MonoBehaviour
                             else
                             {
                                 //Elegimos aleatoriamente un lugar para hacer la actividad
-                                City.shuffleArray(activities[i].doPlaces);
                                 for (int j = 0; j < activities[i].doPlaces.Count; j++)
                                 {
                                     //Intentaremos encontrar un lugar disponible
-                                    BuildingType type = activities[i].doPlaces[j];
+                                    BuildingType type = activities[i].getBuildingTypeAccordingToDistribution();
 
                                     dummyPlace = City.requestAvailablePlace(type);
                                     if (dummyPlace != null)
@@ -142,10 +141,9 @@ public class ActivityStatus : MonoBehaviour
                             }
                             else
                             {
-                                City.shuffleArray(sickActivities[i].doPlaces);
                                 for (int j = 0; j < sickActivities[i].doPlaces.Count; j++)
                                 {
-                                    BuildingType type = sickActivities[i].doPlaces[j];
+                                    BuildingType type = sickActivities[i].getBuildingTypeAccordingToDistribution();
                                     dummyPlace = City.requestAvailablePlace(type);
 
                                     if (dummyPlace != null)

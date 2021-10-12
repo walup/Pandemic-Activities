@@ -6,8 +6,7 @@ using System.Text;
 
 public class AgentFactory : MonoBehaviour 
 {
-    private string ACTIVITIES_A_PATH; 
-    private string ACTIVITIES_B_PATH; 
+    private string ACTIVITIES_H_PATH; 
     private string ACTIVITIES_S_PATH; 
     private  ToroidalWorld world;
     [SerializeField] private  GameObject agentPrefab;
@@ -18,8 +17,9 @@ public class AgentFactory : MonoBehaviour
 
     void Awake()
     {
-        ACTIVITIES_A_PATH = Application.dataPath + "/ActivityJsons/activities_a.json";
-        ACTIVITIES_B_PATH = Application.dataPath + "/ActivityJsons/activities_b.json";
+        //La ruta de las actividades para sanos
+        ACTIVITIES_H_PATH = Application.dataPath + "/ActivityJsons/activities_h.json";
+        //La ruta de las actividades para enfermos
         ACTIVITIES_S_PATH = Application.dataPath + "/ActivityJsons/activities_s.json";
         world = GameObject.Find("Main Camera").GetComponent<ToroidalWorld>();
     }
@@ -28,40 +28,27 @@ public class AgentFactory : MonoBehaviour
     {
         switch (type)
         {
-            case AgentType.TYPE_A:
-                string activitiesString = File.ReadAllText(ACTIVITIES_A_PATH, Encoding.UTF8);
+            case AgentType.LIGHT_AGENT:
+                string activitiesString = File.ReadAllText(ACTIVITIES_H_PATH, Encoding.UTF8);
                 ActivityAgenda agenda = JsonUtility.FromJson<ActivityAgenda>(activitiesString);
-                //agenda.randomizeActivities();
+                //Inicializamos las actividades
+                agenda.initializeActivities();
                 string sickActivitiesString = File.ReadAllText(ACTIVITIES_S_PATH, Encoding.UTF8);
                 ActivityAgenda sickAgenda = JsonUtility.FromJson<ActivityAgenda>(sickActivitiesString);
+                sickAgenda.initializeActivities();
+
                 float randPositionX = Random.Range(world.getAnchorPoint().x, world.getAnchorPoint().x +world.getWorldWidth());
                 float randPositionY = Random.Range(world.getAnchorPoint().y, world.getAnchorPoint().y + world.getWorldHeight());
-                GameObject agentA = GameObject.Instantiate(agentPrefab, new Vector2(randPositionX, randPositionY), Quaternion.Euler(0,0,0));
-                ActivityStatus activityComponent = agentA.GetComponent<ActivityStatus>();
-
-                activityComponent.setAgentType(AgentType.TYPE_A);
+                GameObject lightAgent= GameObject.Instantiate(agentPrefab, new Vector2(randPositionX, randPositionY), Quaternion.Euler(0,0,0));
+                ActivityStatus activityComponent = lightAgent.GetComponent<ActivityStatus>();
+                activityComponent.setAgentType(AgentType.LIGHT_AGENT);
                 activityComponent.setActivities(agenda.activities);
                 activityComponent.setSickActivities(sickAgenda.activities);
 
-                return agentA;
+                return lightAgent;
 
-            case AgentType.TYPE_B:
-
-                string activitiesBString = File.ReadAllText(ACTIVITIES_B_PATH, Encoding.UTF8);
-                ActivityAgenda agendaB = JsonUtility.FromJson<ActivityAgenda>(activitiesBString);
-                string sickActivitiesStringB = File.ReadAllText(ACTIVITIES_S_PATH, Encoding.UTF8);
-                ActivityAgenda sickAgendaB = JsonUtility.FromJson<ActivityAgenda>(sickActivitiesStringB);
-                float randPositionXB = Random.Range(world.getAnchorPoint().x, world.getAnchorPoint().x + world.getWorldWidth());
-                float randPositionYB = Random.Range(world.getAnchorPoint().y, world.getAnchorPoint().y + world.getWorldHeight());
-                GameObject agentB = GameObject.Instantiate(agentPrefab, new Vector2(randPositionXB, randPositionYB), Quaternion.Euler(0, 0, 0));
-                ActivityStatus activityComponentB = agentB.GetComponent<ActivityStatus>();
-                activityComponentB.setAgentType(AgentType.TYPE_B);
-                activityComponentB.setActivities(agendaB.activities);
-                activityComponentB.setSickActivities(sickAgendaB.activities);
-
-                return agentB;
             case AgentType.DATA_SAVER:
-                string activitiesSString = File.ReadAllText(ACTIVITIES_A_PATH, Encoding.UTF8);
+                string activitiesSString = File.ReadAllText(ACTIVITIES_H_PATH, Encoding.UTF8);
                 ActivityAgenda agendaSaver = JsonUtility.FromJson<ActivityAgenda>(activitiesSString);
                 string sickActivitiesSString = File.ReadAllText(ACTIVITIES_S_PATH, Encoding.UTF8);
                 ActivityAgenda sickAgendaSaver = JsonUtility.FromJson<ActivityAgenda>(sickActivitiesSString);
@@ -70,7 +57,7 @@ public class AgentFactory : MonoBehaviour
                 GameObject agentSaver = GameObject.Instantiate(saverPrefab, new Vector2(randPositionXSaver, randPositionYSaver), Quaternion.Euler(0, 0, 0));
                 ActivityStatus activityComponentSaver = agentSaver.GetComponent<ActivityStatus>();
 
-                activityComponentSaver.setAgentType(AgentType.TYPE_A);
+                activityComponentSaver.setAgentType(AgentType.DATA_SAVER);
                 activityComponentSaver.setActivities(agendaSaver.activities);
                 activityComponentSaver.setSickActivities(sickAgendaSaver.activities);
 
@@ -84,4 +71,13 @@ public class AgentFactory : MonoBehaviour
         }
         return null;
     }
+
+
+    /*La idea con este método es exportar los valores de deltas de probabilidad etc. para asegurarnos que sigan las distribuciones
+     del cuestionario, este lo implementaré despues*/
+    public void debugExport()
+    {
+
+    }
+    
 }

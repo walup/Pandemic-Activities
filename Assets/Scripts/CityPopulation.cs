@@ -4,11 +4,10 @@ using UnityEngine;
 public class CityPopulation : MonoBehaviour
 {
     private List<GameObject> agents;
-    [SerializeField] private float portionTypeA = 0.5f;
+    [SerializeField] private float portionLightAgents = 0.95f;
     private AgentFactory agentFactory;
     private City city;
     private int nAgents;
-    private int nSavers = 2;
     [Range(0, 1)]
     [SerializeField] private float visionFraction = 0.05f;
     private float sickRadius;
@@ -69,19 +68,12 @@ public class CityPopulation : MonoBehaviour
         agentFactory = GetComponent<AgentFactory>();
         agents = new List<GameObject>();
         nAgents = City.cityPopulation;
-        int numberOfAAgents = (int)Mathf.Floor(portionTypeA * nAgents)-nSavers;
-        int numberOfSavers = nSavers;
-        int numberOfBAgents = nAgents - numberOfAAgents-nSavers;
+        int numberOfLightAgents = (int)Mathf.Floor(portionLightAgents * nAgents);
+        int numberOfSavers = nAgents - numberOfLightAgents;
 
-        for(int i = 0; i < numberOfAAgents; i++)
+        for(int i = 0; i < numberOfLightAgents; i++)
         {
-            GameObject agent = agentFactory.getAgent(AgentType.TYPE_A);
-            agents.Add(agent);
-        }
-
-        for(int i = 0; i < numberOfBAgents; i++)
-        {
-            GameObject agent = agentFactory.getAgent(AgentType.TYPE_B);
+            GameObject agent = agentFactory.getAgent(AgentType.LIGHT_AGENT);
             agents.Add(agent);
         }
 

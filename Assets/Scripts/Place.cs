@@ -16,6 +16,10 @@ public class Place
 
     // Start is called before the first frame update
 
+    //Lista de los modulos de salud de las personas dentro (este realmente solo lo utilizaré para calibrar el número reproductivo)
+    private List<HealthStatus> sickPeopleStatusList;
+    private List<ProtectionStatus> sickPeopleProtectionStatusList;
+
     public Place(int maxCapacity, BuildingType type, float placeInteractionFactor)
     {
         this.peopleInside = 0;
@@ -23,6 +27,9 @@ public class Place
         this.maxCapacity = maxCapacity;
         this.type = type;
         this.placeInteractionFactor = placeInteractionFactor;
+
+        sickPeopleStatusList = new List<HealthStatus>();
+        sickPeopleProtectionStatusList = new List<ProtectionStatus>();
     }
 
     public void setPosition(float x, float y)
@@ -86,7 +93,7 @@ public class Place
 
     public float getDiseaseInteractionProbability()
     {
-        return ((sickPeopleInside / peopleInside) * placeInteractionFactor);
+        return (((float)sickPeopleInside / peopleInside) * placeInteractionFactor);
     } 
 
     public bool hasSickPeople()
@@ -97,5 +104,46 @@ public class Place
     public int getPeopleInside()
     {
         return peopleInside;
+    }
+
+
+    public void agentEnterAndRegister(bool sick, HealthStatus healthStatus, ProtectionStatus protectionStatus)
+    {
+        if (sick)
+        {
+            sickPeopleInside += 1;
+            sickPeopleStatusList.Add(healthStatus);
+            sickPeopleProtectionStatusList.Add(protectionStatus);
+
+        }
+        peopleInside += 1;
+    }
+
+    
+    public void agentLeaveAndDeregister(bool enteredSick, HealthStatus healthStatus, ProtectionStatus protectionStatus)
+    {
+        if (enteredSick)
+        {
+            sickPeopleInside -= 1;
+            sickPeopleStatusList.Remove(healthStatus);
+            sickPeopleProtectionStatusList.Remove(protectionStatus);
+            //Debug.Log("Count registered people " + sickPeopleStatusList.Count);
+        }
+      
+    peopleInside -= 1;
+    }
+
+    public void incrementRandomSickPersonTransmissionCount()
+     {
+         int index = Random.Range(0, sickPeopleStatusList.Count - 1);
+        sickPeopleStatusList[index].increaseNumberOfAgentsInfected();
+
+     }
+
+    public ProtectionStatus getRandomSickPeopleProtectionStatus()
+    {
+        int randIndex = Random.Range(0, this.sickPeopleProtectionStatusList.Count - 1);
+        return sickPeopleProtectionStatusList[randIndex];
+
     }
 }

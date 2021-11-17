@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2701534579176879295}
   - component: {fileID: 8700261722783861171}
   - component: {fileID: 1511032342282104196}
+  - component: {fileID: 8408161266606363856}
   m_Layer: 0
   m_Name: Citizen
   m_TagString: Untagged
@@ -80,11 +81,22 @@ MonoBehaviour:
     name: 
     duration: 0
     doPlaces: 
+    distributionPlaces: []
+    frequencyValues: []
+    frequencyDistribution: []
+    frequencyBinSize: 0
+    frequencyTimeRate: 0
+    durationValues: []
+    durationDistribution: []
+    durationBinSize: 0
     probability: 0
     probabilityDelta: 0
+    minProbabilityDelta: 0
+    maxProbabilityDelta: 0
     hourPeriodicity: 0
     timeConstraints: 
     noiseCounter: 0
+    cumSumPlaces: []
 --- !u!212 &1511032342282104196
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -136,3 +148,15 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &8408161266606363856
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5726590022410954203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f31b438c6885dee41b236f4de4667feb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

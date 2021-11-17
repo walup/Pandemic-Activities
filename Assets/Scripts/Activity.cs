@@ -38,6 +38,7 @@ public class Activity
     public int[] timeConstraints;
     public int noiseCounter;
 
+    public float[] cumSumPlaces;
 
     //En este método se van a inicializar 4 cosas acorde a las distribuciones de probabilidad:
     //Delta de probabilidad de la actividad acorde a la frecuencia
@@ -132,6 +133,17 @@ public class Activity
             default:
                 break;
         }
+
+        int nPlaceTypes = doPlaces.Count;
+
+
+        cumSumPlaces = new float[nPlaceTypes + 1];
+        cumSumPlaces[0] = 0;
+        for(int i = 1; i < cumSumPlaces.Length; i++)
+        {
+            cumSumPlaces[i] = cumSumPlaces[i - 1] + distributionPlaces[i - 1];
+        }
+
     }
 
 
@@ -139,19 +151,16 @@ public class Activity
     public BuildingType getBuildingTypeAccordingToDistribution()
     {
         float diceThrow = UnityEngine.Random.value;
-        int nPlaceTypes = doPlaces.Count;
 
-        float[] cumSumPlaces = new float[nPlaceTypes + 1];
-        cumSumPlaces[0] = 0;
-        for(int i = 1; i < cumSumPlaces.Length; i++)
+        for(int i = 1; i <cumSumPlaces.Length; i++)
         {
-            cumSumPlaces[i] = cumSumPlaces[i] + distributionPlaces[i - 1];
-
-            if(diceThrow >= cumSumPlaces[i-1] && diceThrow <= cumSumPlaces[i])
+            if (diceThrow >= cumSumPlaces[i - 1] && diceThrow <= cumSumPlaces[i])
             {
+                //Debug.Log(this.name + " " + doPlaces[i - 1]);
                 return doPlaces[i - 1];
             }
         }
+
         return doPlaces[0];
     }
 

@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
+using System.Text;
 public class CityPopulation : MonoBehaviour
 {
     private List<GameObject> agents;
@@ -9,7 +11,7 @@ public class CityPopulation : MonoBehaviour
     private City city;
     private int nAgents;
     [Range(0, 1)]
-    [SerializeField] private float visionFraction = 0.05f;
+    [SerializeField] private float visionFraction = 0.1f;
     private float sickRadius;
     [Header("Parámetros de infección")]
     [Range(0, 1)]
@@ -28,11 +30,11 @@ public class CityPopulation : MonoBehaviour
     [SerializeField] private float omega1 = 0.7f;
     [Range(0, 1)]
     [SerializeField] private float omega2 = 0.7f;
-
+    [SerializeField] private PolicyType policy = PolicyType.NONE;
     int timeCount = 0;
     Graph graph;
 
-
+    PolicyMaker policyMaker;
 
     // Start is called before the first frame update
     void Start()
@@ -45,12 +47,15 @@ public class CityPopulation : MonoBehaviour
         Debug.Log("Número de habitantes " + nAgents);
         //Inicialización de los gráficos
         initializeGraphs();
-
+        //Inicializamos el aplicador de políticas
+        policyMaker = new PolicyMaker();
+        policyMaker.startAgents(agents, policy);
     }
 
     // Update is called once per frame
     void Update()
     {
+        //updateAgentsInteractionsForR0Calibration();
         updateAgentsInteractions();
         updateGraphs();
     }
@@ -60,7 +65,10 @@ public class CityPopulation : MonoBehaviour
     {
         //Al finalizar exportamos las graficas de susceptibles, expuestos, infectados y recuperados
         graph.exportGraph();
+        //exportReproductiveNumber();
     }
+
+    
 
     private void initializeAgents()
     {
@@ -152,19 +160,28 @@ public class CityPopulation : MonoBehaviour
             if (agents[i].GetComponent<HealthStatus>().isAlive())
             {
                 //Si el paciente está moviendose vamos a usar un criterio de distancia
-                if (agents[i].GetComponent<TravelStatus>().isOnTheMove())
+                if (agents[i].GetComponent<TravelStatus>().isOnTheMove() && agents[i].GetComponent<HealthStatus>().getHealth() == HealthState.SUSCEPTIBLE)
                 {
                     for (int j = 0; j < nAgents; j++)
                     {
-                        if (i != j)
+                        if (j != i)
                         {
                             if (agents[j].GetComponent<HealthStatus>().isContagious() && agents[j].GetComponent<TravelStatus>().isOnTheMove())
                             {
-                                agents[i].GetComponent<HealthStatus>().updateHealthState(true, newProbs[0], newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
-                                break;
+                                //Actualizamos el estado de salud
+                                if (Vector2.Distance(agents[i].transform.position, agents[j].transform.position) < sickRadius)
+                                {
+                                    float protection = policyMaker.getMaskProtectionFactor(agents[i].GetComponent<ProtectionStatus>(), agents[j].GetComponent<ProtectionStatus>());
+                                    agents[i].GetComponent<HealthStatus>().updateHealthState(true, newProbs[0]*protection, newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
+
+                                    break;
+                                }
                             }
                         }
                     }
+                }
+                else if(agents[i].GetComponent<TravelStatus>().isOnTheMove())
+                {
                     agents[i].GetComponent<HealthStatus>().updateHealthState(false, newProbs[0], newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
                 }
                 //Si el agente se encuentra en un lugar vamos a usar las dimensiones del lugar y los enfermos dentro
@@ -175,11 +192,15 @@ public class CityPopulation : MonoBehaviour
                     if (place != null && place.hasSickPeople())
                     {
                         //Debug.Log("Número de gente dentro " + place.getPeopleInside() + " Gente enferma " + place.getSickPeopleInside());
-                        agents[i].GetComponent<HealthStatus>().updateHealthState(true, newProbs[0] * place.getDiseaseInteractionProbability(), newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
+                        float protection = policyMaker.getMaskProtectionFactor(agents[i].GetComponent<ProtectionStatus>(), place.getRandomSickPeopleProtectionStatus());
+                        
+                        agents[i].GetComponent<HealthStatus>().updateHealthState(true, newProbs[0]*protection*place.getDiseaseInteractionProbability(), newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
+
                     }
                     else
                     {
                         agents[i].GetComponent<HealthStatus>().updateHealthState(false, newProbs[0], newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
+
                     }
                 }
             }
@@ -220,5 +241,88 @@ public class CityPopulation : MonoBehaviour
             }
         }
         return healthCounts;
+    }
+
+
+    public void updateAgentsInteractionsForR0Calibration()
+    {
+        float[] newProbs = Clock.recalibrateProbabilities(alpha, beta, beta1, gamma, gamma1, omega, omega1, omega2);
+        //Debug.Log(newProbs[0] +" "+newProbs[1] +" "+newProbs[2]);
+        for (int i = 0; i < nAgents; i++)
+        {
+            if (agents[i].GetComponent<HealthStatus>().isAlive())
+            {
+                //Si el paciente está moviendose vamos a usar un criterio de distancia
+                if (agents[i].GetComponent<TravelStatus>().isOnTheMove() && agents[i].GetComponent<HealthStatus>().getHealth() == HealthState.SUSCEPTIBLE)
+                {
+                    for (int j = 0; j < nAgents; j++)
+                    {
+                        if (j != i)
+                        {
+                            if (agents[j].GetComponent<HealthStatus>().isContagious() && agents[j].GetComponent<TravelStatus>().isOnTheMove())
+                            {
+                                //Actualizamos el estado de salud
+                                if (Vector2.Distance(agents[i].transform.position, agents[j].transform.position) < sickRadius)
+                                {
+                                    agents[i].GetComponent<HealthStatus>().updateHealthState(true, newProbs[0], newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
+                                    //Si el agente i se contagio, aumentamos el numero de gente que ha contagiado ael agente j
+                                    if(agents[i].GetComponent<HealthStatus>().getHealth() != HealthState.SUSCEPTIBLE)
+                                    {
+                                        agents[j].GetComponent<HealthStatus>().increaseNumberOfAgentsInfected();
+                                        Debug.Log("Infectado en la calle");
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (agents[i].GetComponent<TravelStatus>().isOnTheMove())
+                {
+                    agents[i].GetComponent<HealthStatus>().updateHealthState(false, newProbs[0], newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
+                }
+                //Si el agente se encuentra en un lugar vamos a usar las dimensiones del lugar y los enfermos dentro
+                else
+                {
+                    Place place = agents[i].GetComponent<ActivityStatus>().getPlace();
+                    //Esto es totalmente inventado pero veremos que tal va
+                    if (place != null && place.hasSickPeople())
+                    {
+                        //Debug.Log("Número de gente dentro " + place.getPeopleInside() + " Gente enferma " + place.getSickPeopleInside());
+                        HealthState prevHealthState = agents[i].GetComponent<HealthStatus>().getHealth();
+                        agents[i].GetComponent<HealthStatus>().updateHealthState(true, newProbs[0] * place.getDiseaseInteractionProbability(), newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
+                        if(prevHealthState == HealthState.SUSCEPTIBLE && agents[i].GetComponent<HealthStatus>().getHealth() != HealthState.SUSCEPTIBLE)
+                        {
+                            place.incrementRandomSickPersonTransmissionCount();
+                            Debug.Log("Infectado en un lugar");
+                        }
+                    }
+                    else
+                    {
+                        agents[i].GetComponent<HealthStatus>().updateHealthState(false, newProbs[0], newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
+
+                    }
+                }
+            }
+        }
+    }
+
+    public void exportReproductiveNumber()
+    {
+        float reproductiveNumber = 0;
+        float nTransmitters = 0;
+        for(int i = 0; i < agents.Count; i++)
+        {
+            HealthState healthState = agents[i].GetComponent<HealthStatus>().getHealth();
+            if(healthState == HealthState.RECOVERED || healthState == HealthState.DEAD)
+            {
+                nTransmitters += 1;
+                reproductiveNumber += agents[i].GetComponent<HealthStatus>().getNumberOfOtherAgentsInfected();
+            }
+        }
+
+        reproductiveNumber = reproductiveNumber / nTransmitters;
+        File.WriteAllText(Application.dataPath + "/CSV_DATA/" + "R0.csv", "Reproductive Number R0: "+reproductiveNumber);
+        Debug.Log("Exported reproductive number " + reproductiveNumber);
     }
 }

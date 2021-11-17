@@ -232,7 +232,7 @@ public class ActivityCreator : MonoBehaviour
         workSick.durationBinSize = 1f;
         //Distribución de frecuencia
         float[] freqValsWorkSick = { 0f, 1f };
-        float[] freqDistWorkSick = { 0.8f, 0.2f };
+        float[] freqDistWorkSick = { 1f, 0f };
         workSick.frequencyValues = freqValsWork;
         workSick.frequencyDistribution = freqDistWork;
         workSick.frequencyTimeRate = TimeRate.TIMES_PER_DAY;

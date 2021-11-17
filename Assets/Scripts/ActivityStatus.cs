@@ -60,7 +60,7 @@ public class ActivityStatus : MonoBehaviour
                             }
                             else
                             {
-                                //Elegimos aleatoriamente un lugar para hacer la actividad
+                         
                                 for (int j = 0; j < activities[i].doPlaces.Count; j++)
                                 {
                                     //Intentaremos encontrar un lugar disponible

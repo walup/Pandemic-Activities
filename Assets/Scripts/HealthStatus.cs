@@ -15,6 +15,7 @@ public class HealthStatus : MonoBehaviour
 
     private SpriteRenderer renderer;
     // Start is called before the first frame update
+    private int nOtherAgentsInfected = 0;
 
     void Awake()
     {
@@ -160,6 +161,16 @@ public class HealthStatus : MonoBehaviour
     public bool isAlive()
     {
         return !(healthState == HealthState.DEAD);
+    }
+
+    public int getNumberOfOtherAgentsInfected()
+    {
+        return nOtherAgentsInfected;
+    }
+
+    public void increaseNumberOfAgentsInfected()
+    {
+        this.nOtherAgentsInfected++;
     }
 
 }

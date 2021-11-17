@@ -30,7 +30,12 @@ public class TravelStatus : MonoBehaviour
                 HealthStatus health = GetComponent<HealthStatus>();
                 setMoving(false);
                 enteredSick = health.isContagious();
-                this.place.agentEnter(enteredSick);
+                //this.place.agentEnter(enteredSick);
+                //this.place.agentEnterAndRegister(enteredSick, health);
+                //También cada vez que llega el agente al lugar hay que actualizar su estado de mascarilla
+                ProtectionStatus protectionStatus = GetComponent<ProtectionStatus>();
+                this.place.agentEnterAndRegister(enteredSick, health, protectionStatus);
+                protectionStatus.updateAgentMaskProtection(place.getType(), isOnTheMove());
             }
         }
     }
@@ -54,12 +59,14 @@ public class TravelStatus : MonoBehaviour
     {
         if (this.place != null && !isOnTheMove())
         {
-            this.place.agentLeave(enteredSick);
+            //this.place.agentLeave(enteredSick);
+            this.place.agentLeaveAndDeregister(enteredSick, GetComponent<HealthStatus>(), GetComponent<ProtectionStatus>());
         }
         this.place = place;
         this.destination = place.getPlacePosition();
         //Debug.Log("New destination " + this.destination);
         setMoving(true);
+        GetComponent<ProtectionStatus>().updateAgentMaskProtection(place.getType(), isOnTheMove());
     }
 
     public Place getPlace()

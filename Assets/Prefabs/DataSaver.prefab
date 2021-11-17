@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 4324612152747595553}
   - component: {fileID: 5783134083936138006}
   - component: {fileID: 8235495954853946254}
+  - component: {fileID: -3985731889612662300}
   m_Layer: 0
   m_Name: DataSaver
   m_TagString: Untagged
@@ -81,10 +82,22 @@ MonoBehaviour:
     name: 
     duration: 0
     doPlaces: 
+    distributionPlaces: []
+    frequencyValues: []
+    frequencyDistribution: []
+    frequencyBinSize: 0
+    frequencyTimeRate: 0
+    durationValues: []
+    durationDistribution: []
+    durationBinSize: 0
     probability: 0
     probabilityDelta: 0
+    minProbabilityDelta: 0
+    maxProbabilityDelta: 0
     hourPeriodicity: 0
     timeConstraints: 
+    noiseCounter: 0
+    cumSumPlaces: []
 --- !u!212 &5783134083936138006
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -146,5 +159,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 86ef1f61bece2b74c8c73c614cc36b28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-3985731889612662300
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 847096120897682249}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f31b438c6885dee41b236f4de4667feb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

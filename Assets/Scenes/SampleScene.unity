@@ -15830,16 +15830,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc5db9511dac50d4aa7c08a09d5d0035, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  portionTypeA: 0.5
+  portionLightAgents: 0.95
   visionFraction: 0.05
-  alpha: 0.701
-  beta: 0.07
+  alpha: 0.94
+  beta: 0.3
   beta1: 0.11
-  gamma: 0.08
-  gamma1: 0.91
+  gamma: 0.07
+  gamma1: 0.8
   omega: 0.08
   omega1: 0.8
-  omega2: 0.09
+  omega2: 0.11
 --- !u!4 &1283170809
 Transform:
   m_ObjectHideFlags: 0

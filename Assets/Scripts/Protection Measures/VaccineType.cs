@@ -4,13 +4,13 @@ using UnityEngine;
 
 public enum VaccineType
 {
-    PFIZER, 
-    ASTRA_ZENECA, 
-    SPUTNIK,
-    SINOVAC,
-    CANSINO, 
-    COVAXIN, 
-    JANSSEN,
-    NONE,
-    MODERNA,
+    PFIZER = 0, 
+    ASTRA_ZENECA = 1, 
+    SPUTNIK = 2,
+    SINOVAC = 3,
+    CANSINO = 4, 
+    COVAXIN = 5, 
+    JANSSEN = 6,
+    NONE = 7,
+    MODERNA = 8,
 }

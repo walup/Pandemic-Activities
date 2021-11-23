@@ -17,7 +17,8 @@ public class PolicyMaker
     public VaccineDistributions vaccineDistributions;
     public VaccinationProgram program = VaccinationProgram.LINEAR;
     public int vaccinationDayStart = 2;
-    public int vaccinationDayEnd = 100;
+    public int vaccinationDayEnd = 50;
+    public static int daysBetweenVaccinations;
 
     public PolicyMaker()
     {
@@ -29,6 +30,8 @@ public class PolicyMaker
         INFECTED_MASK_EFFICACY = 0.95f;
         SUSCEPTIBLE_MASK_EFFICACY = 0.85f;
         BOTH_PERSON_MASK_EFFICACY = 1.0f;
+
+        daysBetweenVaccinations = (int)Mathf.Floor(((float)vaccinationDayEnd - (float)vaccinationDayStart) / 4f);
     }
 
     //Este método va a inicializar los agentes con el tipo de política que 
@@ -52,15 +55,43 @@ public class PolicyMaker
                 float[] vaccineProbs = vaccineDistributions.vaccinatedDistribution;
 
                 int nAgents = agents.Count;
-                int agentsToBeScheduledForVaccine = (int)(vaccineProbs[0] * nAgents);
+                int agentsToBeScheduledForVaccine = nAgents;
                 int[] vaccineSchedule = getVaccinationProgram(agentsToBeScheduledForVaccine, vaccinationDayStart, vaccinationDayEnd);
+                ProtectionStatus.setVaccinationScenario(true);
                 //Configuramos a los que si se vacunaran
                 for(int i = 0; i < agentsToBeScheduledForVaccine; i++)
                 {
-                    
+                    ProtectionStatus protectionStatus = agents[i].GetComponent<ProtectionStatus>();
+                    //Prendemos el escenario de vacunación
+                    protectionStatus.setVaccinationDay(vaccineSchedule[i]);
+                    protectionStatus.setScheduledForVaccine(true);
+                    protectionStatus.setDosesApplied(0);
+                    VaccineType vaccineType = vaccineDistributions.getRandomVaccineType();
+                    int applications = vaccineDistributions.getNumberOfDoses(vaccineType);
+                    float efficacyForContagion = vaccineDistributions.getVaccineEfficacyForContagion(vaccineType);
+                    float efficacyForCriticalIllness = vaccineDistributions.getVaccineEfficacyForCriticalIllness(vaccineType);
+
+                    //Debug.Log(vaccineType);
+                    //Debug.Log(applications);
+                    //Debug.Log(efficacyForContagion);
+                    //Debug.Log(efficacyForCriticalIllness);
+
+                    protectionStatus.setDosesRequired(applications);
+                    protectionStatus.setEfficacyForInfection(efficacyForContagion);
+                    protectionStatus.setEfficacyForCriticalInfection(efficacyForCriticalIllness);
+
                 }
                 //Configuramos a los que no se vacunaran
+                for(int i = agentsToBeScheduledForVaccine; i < nAgents; i++)
+                {
+                    ProtectionStatus protectionStatus = agents[i].GetComponent<ProtectionStatus>();
+                    protectionStatus.setScheduledForVaccine(false);
+                    protectionStatus.setDosesApplied(0);
+                    protectionStatus.setDosesRequired(0);
+                    protectionStatus.setEfficacyForInfection(0);
+                    protectionStatus.setEfficacyForCriticalInfection(0);
 
+                }
                 break;
 
              case PolicyType.STOPLIGHT:
@@ -68,10 +99,56 @@ public class PolicyMaker
 
             case PolicyType.NONE:
                 break;
-     
             }
       
     }
+
+
+    public float getVaccinationContagionProtectionFactor(ProtectionStatus susceptibleProtection)
+    {
+        if (ProtectionStatus.vaccinationScenario)
+        {
+            if (susceptibleProtection.isVaccinated())
+            {
+                //Debug.Log("Vaccinated");
+                //Debug.Log(susceptibleProtection.getDosesApplied());
+                //Debug.Log(susceptibleProtection.getDosesNeeded());
+                //Debug.Log(susceptibleProtection.getEfficacyForInfection());
+                //Debug.Log(1.0f - ((float)susceptibleProtection.getDosesApplied() / (float)susceptibleProtection.getDosesNeeded()) * susceptibleProtection.getEfficacyForInfection());
+                return 1.0f - ((float)susceptibleProtection.getDosesApplied() / (float)susceptibleProtection.getDosesNeeded()) * susceptibleProtection.getEfficacyForInfection();
+            }
+            else
+            {
+                return 1;
+            }
+        }
+        else
+        {
+            return 1;
+        }
+    }
+
+    public float getVaccinationCriticalProtectionFactor(ProtectionStatus susceptibleProtection)
+    {
+        if (ProtectionStatus.vaccinationScenario)
+        {
+            if (susceptibleProtection.isVaccinated())
+            {
+                return 1.0f - ((float)susceptibleProtection.getDosesApplied() / (float)susceptibleProtection.getDosesNeeded()) * susceptibleProtection.getEfficacyForCriticalInfection();
+            }
+            else
+            {
+                return 1;
+            }
+        }
+        else
+        {
+            return 1;
+        }
+    }
+
+
+
 
 
     public float getMaskProtectionFactor(ProtectionStatus susceptibleProtection, ProtectionStatus infectedProtection)

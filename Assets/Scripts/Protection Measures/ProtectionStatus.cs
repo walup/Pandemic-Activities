@@ -10,7 +10,7 @@ public class ProtectionStatus : MonoBehaviour
     private float maskProtectionPercentage;
 
     //Vacunas
-    private bool vaccinationScenario = false;
+    public static bool vaccinationScenario = false;
     private bool scheduledForVaccine = false;
     private int vaccinationDay;
     private int nDosesApplied;
@@ -30,16 +30,35 @@ public class ProtectionStatus : MonoBehaviour
     void Start()
     {
         maskProtectionPercentage = 0;
+        //efficacyForInfection = 0;
+        //efficacyForCriticalInfection = 0;
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (vaccinationScenario)
+        {
+            if (scheduledForVaccine && Clock.dayVal == vaccinationDay)
+            {
+                nDosesApplied += 1;
+                Debug.Log("Vaccinated nDoses = "+nDosesApplied);
+                if(nDosesApplied == nDosesRequired)
+                {
+                    scheduledForVaccine = false;
+                }
+
+                else
+                {
+                    vaccinationDay = vaccinationDay + PolicyMaker.daysBetweenVaccinations;
+                }
+            }
+        }
     }
 
 
-
+       
     public void activateMaskWearing()
     {
         this.maskWearingScenario = true;
@@ -52,8 +71,10 @@ public class ProtectionStatus : MonoBehaviour
         {
             if (!moving)
             {
-                float[] placeMaskDistribution = ((SerializableFloatList) PolicyMaker.maskDistributions.placesDistributionHashtable[type]).floatList;
+
+                float[] placeMaskDistribution = ((SerializableFloatList)PolicyMaker.maskDistributions.placesDistributionHashtable[type]).floatList;
                 float[] placeMaskDistributionValues = ((SerializableFloatList)PolicyMaker.maskDistributions.placesDistributionValuesHashtable[type]).floatList;
+
 
                 float cumSum = 0;
                 float throwDice = Random.value;
@@ -78,9 +99,9 @@ public class ProtectionStatus : MonoBehaviour
                 float cumSum = 0;
                 float throwDice = Random.value;
                 int index = 0;
-                for(int i = 0; i < travelDistribution.Length; i++)
+                for (int i = 0; i < travelDistribution.Length; i++)
                 {
-                    if(throwDice >= cumSum &&  throwDice <= cumSum + travelDistribution[i])
+                    if (throwDice >= cumSum && throwDice <= cumSum + travelDistribution[i])
                     {
                         index = i;
                         break;
@@ -104,9 +125,9 @@ public class ProtectionStatus : MonoBehaviour
         }
     }
 
-    public void setVaccinationScenario(bool activation)
+    public static void setVaccinationScenario(bool activation)
     {
-        this.vaccinationScenario = activation;
+        vaccinationScenario = activation;
     }
 
     public void setScheduledForVaccine(bool scheduledForVaccine)
@@ -122,6 +143,11 @@ public class ProtectionStatus : MonoBehaviour
     public void setDosesRequired(int dosesRequired)
     {
         this.nDosesRequired = dosesRequired;
+        if(dosesRequired == 0)
+        {
+            scheduledForVaccine = false;
+            Debug.Log("Not Scheduled for vaccine");
+        }
     }
 
     public void setDosesApplied(int dosesApplied)
@@ -131,12 +157,39 @@ public class ProtectionStatus : MonoBehaviour
 
     public void setEfficacyForInfection(float efficacy)
     {
-        this.efficacyForInfection= efficacy;
+        this.efficacyForInfection = efficacy;
     }
 
     public void setEfficacyForCriticalInfection(float efficacy)
     {
         this.efficacyForCriticalInfection = efficacy;
     }
+        
+    public float getEfficacyForInfection()
+    {
+        return this.efficacyForInfection;
+    }
 
-}
+    public float getEfficacyForCriticalInfection()
+    {
+        return this.efficacyForCriticalInfection;
+    }
+
+    public int getDosesApplied()
+    {
+        return nDosesApplied;
+    }
+
+
+    public int getDosesNeeded()
+    {
+        return nDosesRequired;
+    } 
+
+    public bool isVaccinated()
+    {
+        return nDosesApplied >= 1;
+    }
+
+
+    } 

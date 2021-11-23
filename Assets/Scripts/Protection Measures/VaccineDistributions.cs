@@ -32,4 +32,42 @@ public class VaccineDistributions
         float[] vaccEfficaciesIllness = { 0.95f, 0.93f, 0.9f, 0.9f, 0.9f, 0.9f, 0.9f, 0.8f, 0, 0.94f };
         vaccinationEfficaciesCriticalIllness = vaccEfficaciesIllness;
     }
+
+
+    public int getNumberOfDoses(VaccineType vaccineType)
+    {
+        int index = (int)vaccineType;
+        return vaccinationDoses[index];
+    }
+
+
+    public float getVaccineEfficacyForContagion(VaccineType vaccineType)
+    {
+        int index = (int)vaccineType;
+        return vaccinationEfficaciesContagion[index];
+    }
+
+    public float getVaccineEfficacyForCriticalIllness(VaccineType vaccineType)
+    {
+        int index = (int)vaccineType;
+        return vaccinationEfficaciesCriticalIllness[index];
+    }
+
+    public VaccineType getRandomVaccineType()
+    {
+        float diceRoll = Random.value;
+        float cumulativeDistribution = 0;
+        int index = 0;
+        for(int i = 0; i < vaccinationTypeDistribution.Length; i++)
+        {
+            if(diceRoll >= cumulativeDistribution && diceRoll <= cumulativeDistribution + vaccinationTypeDistribution[i])
+            {
+                index = i;
+                break;
+            }
+            cumulativeDistribution = cumulativeDistribution + vaccinationTypeDistribution[i];
+        }
+        return (VaccineType)index;
+    }
+
 }

@@ -159,6 +159,7 @@ public class CityPopulation : MonoBehaviour
         {
             if (agents[i].GetComponent<HealthStatus>().isAlive())
             {
+                ProtectionStatus exposedProtection = agents[i].GetComponent<ProtectionStatus>();
                 //Si el paciente está moviendose vamos a usar un criterio de distancia
                 if (agents[i].GetComponent<TravelStatus>().isOnTheMove() && agents[i].GetComponent<HealthStatus>().getHealth() == HealthState.SUSCEPTIBLE)
                 {
@@ -171,8 +172,16 @@ public class CityPopulation : MonoBehaviour
                                 //Actualizamos el estado de salud
                                 if (Vector2.Distance(agents[i].transform.position, agents[j].transform.position) < sickRadius)
                                 {
-                                    float protection = policyMaker.getMaskProtectionFactor(agents[i].GetComponent<ProtectionStatus>(), agents[j].GetComponent<ProtectionStatus>());
-                                    agents[i].GetComponent<HealthStatus>().updateHealthState(true, newProbs[0]*protection, newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
+                                    
+                                    ProtectionStatus infectedProtection = agents[j].GetComponent<ProtectionStatus>();
+
+                                    float protectionMask = policyMaker.getMaskProtectionFactor(exposedProtection, infectedProtection);
+                                    float infectionVaccineProtection = policyMaker.getVaccinationContagionProtectionFactor(exposedProtection);
+                                    float criticalCaseVaccineProtection = policyMaker.getVaccinationCriticalProtectionFactor(exposedProtection);
+                                    //Debug.Log(protectionMask);
+                                    //Debug.Log(infectionVaccineProtection);
+                                    //Debug.Log(criticalCaseVaccineProtection);
+                                    agents[i].GetComponent<HealthStatus>().updateHealthState(true, newProbs[0]*protectionMask*infectionVaccineProtection, newProbs[1], newProbs[2]*criticalCaseVaccineProtection, newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
 
                                     break;
                                 }
@@ -182,7 +191,8 @@ public class CityPopulation : MonoBehaviour
                 }
                 else if(agents[i].GetComponent<TravelStatus>().isOnTheMove())
                 {
-                    agents[i].GetComponent<HealthStatus>().updateHealthState(false, newProbs[0], newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
+                    float criticalCaseVaccineProtection = policyMaker.getVaccinationCriticalProtectionFactor(exposedProtection);
+                    agents[i].GetComponent<HealthStatus>().updateHealthState(false, newProbs[0], newProbs[1], newProbs[2]*criticalCaseVaccineProtection, newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
                 }
                 //Si el agente se encuentra en un lugar vamos a usar las dimensiones del lugar y los enfermos dentro
                 else
@@ -192,15 +202,19 @@ public class CityPopulation : MonoBehaviour
                     if (place != null && place.hasSickPeople())
                     {
                         //Debug.Log("Número de gente dentro " + place.getPeopleInside() + " Gente enferma " + place.getSickPeopleInside());
-                        float protection = policyMaker.getMaskProtectionFactor(agents[i].GetComponent<ProtectionStatus>(), place.getRandomSickPeopleProtectionStatus());
-                        
-                        agents[i].GetComponent<HealthStatus>().updateHealthState(true, newProbs[0]*protection*place.getDiseaseInteractionProbability(), newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
+                        ProtectionStatus exposedStatus = agents[i].GetComponent<ProtectionStatus>();
+                        ProtectionStatus infectedStatus = place.getRandomSickPeopleProtectionStatus();
+                        float maskProtection = policyMaker.getMaskProtectionFactor(exposedStatus,infectedStatus);
+                        float infectionVaccineProtection = policyMaker.getVaccinationContagionProtectionFactor(exposedProtection);
+                        float criticalCaseVaccineProtection = policyMaker.getVaccinationCriticalProtectionFactor(exposedProtection);
+
+                        agents[i].GetComponent<HealthStatus>().updateHealthState(true, newProbs[0]*maskProtection*place.getDiseaseInteractionProbability()*infectionVaccineProtection, newProbs[1], newProbs[2]*criticalCaseVaccineProtection, newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
 
                     }
                     else
                     {
-                        agents[i].GetComponent<HealthStatus>().updateHealthState(false, newProbs[0], newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
-
+                        float criticalCaseVaccineProtection = policyMaker.getVaccinationCriticalProtectionFactor(exposedProtection);
+                        agents[i].GetComponent<HealthStatus>().updateHealthState(false, newProbs[0], newProbs[1], newProbs[2]*criticalCaseVaccineProtection, newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
                     }
                 }
             }
@@ -299,6 +313,7 @@ public class CityPopulation : MonoBehaviour
                     }
                     else
                     {
+
                         agents[i].GetComponent<HealthStatus>().updateHealthState(false, newProbs[0], newProbs[1], newProbs[2], newProbs[3], newProbs[4], newProbs[5], newProbs[6], newProbs[7]);
 
                     }

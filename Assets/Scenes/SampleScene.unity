@@ -15840,6 +15840,7 @@ MonoBehaviour:
   omega: 0.08
   omega1: 0.8
   omega2: 0.11
+  policy: 2
 --- !u!4 &1283170809
 Transform:
   m_ObjectHideFlags: 0

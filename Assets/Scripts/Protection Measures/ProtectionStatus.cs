@@ -10,19 +10,23 @@ public class ProtectionStatus : MonoBehaviour
     private float maskProtectionPercentage;
 
     //Vacunas
-    public static bool vaccinationScenario = false;
     private bool scheduledForVaccine = false;
     private int vaccinationDay;
     private int nDosesApplied;
     private int nDosesRequired;
     private float efficacyForInfection;
     private float efficacyForCriticalInfection;
+    public static bool vaccinationScenario = false;
+    public static bool fadingVaccine = false;
+    private int dayFinalVaccine = 0;
+    private int daysSinceVaccine = 0;
 
     //Distanciamiento social
     private bool socialDistancing = true;
     private float distancingRadius;
 
-    //Aislamiento (semáforo)
+    //Aislamiento (semáforo parcial)
+    private bool isolating;
 
 
 
@@ -32,7 +36,6 @@ public class ProtectionStatus : MonoBehaviour
         maskProtectionPercentage = 0;
         //efficacyForInfection = 0;
         //efficacyForCriticalInfection = 0;
-
     }
 
     // Update is called once per frame
@@ -47,6 +50,7 @@ public class ProtectionStatus : MonoBehaviour
                 if(nDosesApplied == nDosesRequired)
                 {
                     scheduledForVaccine = false;
+                    dayFinalVaccine = (int)Clock.dayVal;
                 }
 
                 else
@@ -157,6 +161,7 @@ public class ProtectionStatus : MonoBehaviour
 
     public void setEfficacyForInfection(float efficacy)
     {
+
         this.efficacyForInfection = efficacy;
     }
 
@@ -167,11 +172,61 @@ public class ProtectionStatus : MonoBehaviour
         
     public float getEfficacyForInfection()
     {
+         return this.efficacyForInfection;
+    }
+
+    public float getEffectiveEfficacyForInfection()
+    {
+        if (!fadingVaccine)
+        {
+            return this.efficacyForInfection;
+        }
+        else
+        {
+            if (dayFinalVaccine > 0)
+            {
+                daysSinceVaccine = (int)Clock.dayVal - dayFinalVaccine;
+                if (PolicyMaker.daysForVaccineDissipation > daysSinceVaccine)
+                {
+                    return this.efficacyForInfection * (1 - (float)daysSinceVaccine / (float)PolicyMaker.daysForVaccineDissipation);
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+
+        }
         return this.efficacyForInfection;
     }
 
     public float getEfficacyForCriticalInfection()
     {
+        return this.efficacyForCriticalInfection;
+    }
+
+    public float getEffectiveEfficacyForCriticalInfection()
+    {
+        if (!fadingVaccine)
+        {
+            return this.efficacyForCriticalInfection;
+        }
+        else
+        {
+            if(dayFinalVaccine > 0)
+            {
+                daysSinceVaccine = (int)Clock.dayVal - dayFinalVaccine;
+                if (PolicyMaker.daysForVaccineDissipation > daysSinceVaccine)
+                {
+                    return this.efficacyForCriticalInfection * (1 - (float)daysSinceVaccine / (float)PolicyMaker.daysForVaccineDissipation);
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+
+        }
         return this.efficacyForCriticalInfection;
     }
 
@@ -191,5 +246,19 @@ public class ProtectionStatus : MonoBehaviour
         return nDosesApplied >= 1;
     }
 
+    public static void setFadingScenario(bool scenario)
+    {
+        fadingVaccine = scenario;
+    }
+
+    public void setIsolating(bool isolating)
+    {
+        this.isolating = isolating;
+    }
+
+    public bool isIsolating()
+    {
+        return this.isolating;
+    }
 
     } 

@@ -11,9 +11,11 @@ public class AgentFactory : MonoBehaviour
     private  ToroidalWorld world;
     [SerializeField] private  GameObject agentPrefab;
     [SerializeField] private GameObject saverPrefab;
+    [SerializeField] private GameObject probabilitySaverPrefab;
     private string baseName = "data_";
     private int nameCounter = 0;
     private float samplingFrequency = 1;
+    private float probSaverSamplingFrequency = 1;
 
     void Awake()
     {
@@ -70,6 +72,31 @@ public class AgentFactory : MonoBehaviour
                 saverComponent.activateSaving();
 
                 return agentSaver;
+
+            case AgentType.PROBABILITY_SAVER:
+                string activitiesPSString = File.ReadAllText(ACTIVITIES_H_PATH, Encoding.UTF8);
+                ActivityAgenda agendaProbSaver = JsonUtility.FromJson<ActivityAgenda>(activitiesPSString);
+                agendaProbSaver.initializeActivities();
+                string sickActivitiesPSString = File.ReadAllText(ACTIVITIES_S_PATH, Encoding.UTF8);
+                ActivityAgenda sickAgendaProbSaver = JsonUtility.FromJson<ActivityAgenda>(sickActivitiesPSString);
+                sickAgendaProbSaver.initializeActivities();
+                float randPositionXProbSaver = Random.Range(world.getAnchorPoint().x, world.getAnchorPoint().x + world.getWorldWidth());
+                float randPositionYProbSaver = Random.Range(world.getAnchorPoint().y, world.getAnchorPoint().y + world.getWorldHeight());
+                GameObject agentProbSaver = GameObject.Instantiate(probabilitySaverPrefab, new Vector2(randPositionXProbSaver, randPositionYProbSaver), Quaternion.Euler(0, 0, 0));
+                ActivityStatus activityComponentProbSaver = agentProbSaver.GetComponent<ActivityStatus>();
+
+                activityComponentProbSaver.setAgentType(AgentType.PROBABILITY_SAVER);
+                activityComponentProbSaver.setActivities(agendaProbSaver.activities);
+                activityComponentProbSaver.setSickActivities(sickAgendaProbSaver.activities);
+
+                ProbabilitySaver probSaverComponent = agentProbSaver.GetComponent<ProbabilitySaver>();
+                probSaverComponent.setFileName(baseName + nameCounter + ".csv");
+                nameCounter++;
+                probSaverComponent.setFrequency(probSaverSamplingFrequency);
+                probSaverComponent.activateSaving();
+
+                return agentProbSaver;
+
         }
         return null;
     }

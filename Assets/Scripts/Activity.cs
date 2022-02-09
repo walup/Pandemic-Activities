@@ -252,4 +252,9 @@ public class Activity
     }
 
 
+    public float getProbabilityDelta()
+    {
+        return probabilityDelta;
+    }
+
 }

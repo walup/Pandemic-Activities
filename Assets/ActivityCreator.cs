@@ -62,7 +62,7 @@ public class ActivityCreator : MonoBehaviour
         float[] placesDistSick = { 1f };
         sickActivityHealthy.distributionPlaces = placesDistSick;
         //Constricciones de tiempo
-        sickActivityHealthy.timeConstraints = new int[2] { 0, 24};
+        sickActivityHealthy.timeConstraints = new int[2] { 6, 24};
         //El contador de ruido
         sickActivityHealthy.noiseCounter = 0;
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using System.IO;
-public class DataSaver : MonoBehaviour
+public class ProbabilitySaver : MonoBehaviour
 {
     // Start is called before the first frame update
 
@@ -21,10 +21,18 @@ public class DataSaver : MonoBehaviour
         if (saveActivated)
         {
             dataSaveClock += Clock.hourDelta;
-            if(dataSaveClock > deltaTime)
+            if (dataSaveClock > deltaTime)
             {
                 dataSaveClock = 0;
-                builder.AppendLine(getFormattedPoint(transform.position.x, transform.position.y, (int)GetComponent<HealthStatus>().getHealth()));
+                ActivityStatus activityStatus = GetComponent<ActivityStatus>();
+                Activity workActivity = activityStatus.getHealthyNamedActivity("Work");
+                Activity exerciseActivity = activityStatus.getHealthyNamedActivity("Exercise");
+
+
+                if (workActivity != null && exerciseActivity!= null)
+                {
+                    builder.AppendLine(getFormattedPoint5D(Clock.hour, workActivity.getProbability(), exerciseActivity.getProbability(), workActivity.getProbabilityDelta(), exerciseActivity.getProbabilityDelta()));
+                }
             }
         }
     }
@@ -32,7 +40,7 @@ public class DataSaver : MonoBehaviour
     void OnApplicationQuit()
     {
         File.WriteAllText(this.pathName, builder.ToString());
-        Debug.Log("Written files ");
+        Debug.Log("Written probabilities ");
     }
 
     public void activateSaving()
@@ -54,27 +62,32 @@ public class DataSaver : MonoBehaviour
         this.builder.AppendLine("Frecuencia de muestreo (1/h): " + this.samplingFrequency.ToString());
     }
 
-
-
     public void setFileName(string name)
     {
         this.pathName = Application.dataPath + "/CSV_DATA/" + name;
-       
+
     }
 
 
 
-    private string getFormattedPoint(float x, float y,float z)
+    private string getFormattedPoint(float x, float y, float z)
     {
         string newLine = string.Format("{0},{1},{2}", x, y, z);
         return newLine;
 
     }
 
-    private string getFormatted1D(float x)
+    private string getFormattedPoint5D(float x, float y, float z, float m, float n)
+    {
+        string newLine = string.Format("{0},{1},{2},{3},{4}",x,y,z,m,n);
+        return newLine;
+    }
+
+    private string getFormatted2D(float x, float y)
     {
         string newLine = string.Format("{0}", x);
 
         return newLine;
     }
 }
+

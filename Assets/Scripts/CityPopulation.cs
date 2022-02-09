@@ -58,6 +58,12 @@ public class CityPopulation : MonoBehaviour
         //updateAgentsInteractionsForR0Calibration();
         updateAgentsInteractions();
         updateGraphs();
+
+        if (this.policyMaker.isStopLightPolicy() && Clock.hour != policyMaker.hospitalCheckHour)
+        {
+            updateStoplight();
+            policyMaker.hospitalCheckHour = Clock.hour;
+        }
     }
 
 
@@ -67,8 +73,6 @@ public class CityPopulation : MonoBehaviour
         graph.exportGraph();
         //exportReproductiveNumber();
     }
-
-    
 
     private void initializeAgents()
     {
@@ -339,5 +343,26 @@ public class CityPopulation : MonoBehaviour
         reproductiveNumber = reproductiveNumber / nTransmitters;
         File.WriteAllText(Application.dataPath + "/CSV_DATA/" + "R0.csv", "Reproductive Number R0: "+reproductiveNumber);
         Debug.Log("Exported reproductive number " + reproductiveNumber);
+    }
+
+
+    private void updateStoplight()
+    {
+        if (!policyMaker.isStoplightOn())
+        {
+            //Obtenemos la ocupación hospitalaria
+            float hospitalOccupation = this.city.countPeopleInPlaces(BuildingType.HOSPITAL)/this.nAgents;
+            //Debug.Log("Hospital occupation " + hospitalOccupation);
+            if(hospitalOccupation > StoplightControl.OCCUPATION_THRESHOLD)
+            {
+                Debug.Log("Stoplight turned on");
+                policyMaker.isolateAgents(agents);
+            } 
+        }
+        if (policyMaker.endedIsolation())
+        {
+            policyMaker.freeAgents(agents);
+            Debug.Log("Stoplight turned off");
+        }
     }
 }

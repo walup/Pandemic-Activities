@@ -15,7 +15,10 @@ public class ActivityStatus : MonoBehaviour
 
     //Noise
     private Noise noiseGenerator;
-    
+
+    //Protection Status
+    private ProtectionStatus protectionStatus;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -23,8 +26,10 @@ public class ActivityStatus : MonoBehaviour
         healthStatus = GetComponent<HealthStatus>();
         doingActivity = false;
 
-        //noiseGenerator = new PerlinNoiseGenerator(0.01f, 0.6f, 8);
-        noiseGenerator = new WhiteNoise();
+        noiseGenerator = new PerlinNoiseGenerator(0.01f, 0.6f, 8);
+        //noiseGenerator = new WhiteNoise();
+
+        protectionStatus = GetComponent<ProtectionStatus>();
     }
 
     // Update is called once per frame
@@ -37,7 +42,6 @@ public class ActivityStatus : MonoBehaviour
                 if (!doingActivity)
                 {
                     //Buscamos la actividad de probabilidad mas alta que podamos hacer 
-
                     activities.Sort((x, y) => x.probability.CompareTo(y.probability));
 
                     for (int i = activities.Count - 1; i >= 0; i--)
@@ -60,13 +64,14 @@ public class ActivityStatus : MonoBehaviour
                             }
                             else
                             {
-                         
+
                                 for (int j = 0; j < activities[i].doPlaces.Count; j++)
                                 {
                                     //Intentaremos encontrar un lugar disponible
                                     BuildingType type = activities[i].getBuildingTypeAccordingToDistribution();
 
-                                    dummyPlace = City.requestAvailablePlace(type);
+                                    //dummyPlace = City.requestAvailablePlace(type);
+                                    dummyPlace = City.requestAvailablePlaceWithRestriction(type, transform.position, protectionStatus.isIsolating());
                                     if (dummyPlace != null)
                                     {
                                         startActivityHour = Clock.hour;
@@ -95,6 +100,16 @@ public class ActivityStatus : MonoBehaviour
                             activities[i].updateProbability();
                         }
                     }
+
+
+                    if (dummyPlace == null && protectionStatus.isIsolating())
+                    {
+                        //Repetimos la actividad
+                        startActivityHour = Clock.hour;
+                        doingActivity = true;
+                        currentActivity.probability = 0;
+                    }
+
                 }
                 else
                 {
@@ -108,7 +123,6 @@ public class ActivityStatus : MonoBehaviour
 
                     if (currentActivity.finishedActivity(startActivityHour))
                     {
-                        currentActivity = null;
                         doingActivity = false;
                     }
                 }
@@ -118,7 +132,6 @@ public class ActivityStatus : MonoBehaviour
             {
                 if (!doingActivity)
                 {
-
                     //Buscamos la actividad de probabilidad mas alta que podamos hacer y 
 
                     sickActivities.Sort((x, y) => x.probability.CompareTo(y.probability));
@@ -144,8 +157,9 @@ public class ActivityStatus : MonoBehaviour
                                 for (int j = 0; j < sickActivities[i].doPlaces.Count; j++)
                                 {
                                     BuildingType type = sickActivities[i].getBuildingTypeAccordingToDistribution();
-                                    dummyPlace = City.requestAvailablePlace(type);
 
+                                    //dummyPlace = City.requestAvailablePlace(type);
+                                    dummyPlace = City.requestAvailablePlaceWithRestriction(type, transform.position, protectionStatus.isIsolating());
                                     if (dummyPlace != null)
                                     {
                                         startActivityHour = Clock.hour;
@@ -173,6 +187,16 @@ public class ActivityStatus : MonoBehaviour
                             sickActivities[i].updateProbability();
                         }
                     }
+
+
+                    if (dummyPlace == null && protectionStatus.isIsolating())
+                    {
+                        //Repetimos la actividad
+                        startActivityHour = Clock.hour;
+                        doingActivity = true;
+                        currentActivity.probability = 0;
+                    }
+
                 }
                 else
                 {
@@ -186,7 +210,6 @@ public class ActivityStatus : MonoBehaviour
 
                     if (currentActivity.finishedActivity(startActivityHour))
                     {
-                        currentActivity = null;
                         doingActivity = false;
                     }
                 }
@@ -194,7 +217,7 @@ public class ActivityStatus : MonoBehaviour
         }
     }
 
-    
+
     public void setAgentType(AgentType type)
     {
         this.agentType = type;
@@ -224,5 +247,44 @@ public class ActivityStatus : MonoBehaviour
     {
         currentActivity = null;
         doingActivity = false;
+    }
+
+    public Activity getActivity()
+    {
+        return currentActivity;
+    }
+
+    public Activity getHealthyNamedActivity(string activityName)
+    {
+        for (int i = 0; i < activities.Count; i++)
+        {
+            if (activities[i].name == activityName)
+            {
+                return activities[i];
+            }
+        }
+
+        return null;
+    }
+
+
+    public void goHome()
+    {
+        //Encontramos una actividad que se pueda hacer en casa
+        for (int i = 0; i < activities.Count; i++)
+        {
+            if (activities[i].doPlaces.Contains(BuildingType.HOUSE))
+            {
+                startActivityHour = Clock.hour;
+                doingActivity = true;
+                currentActivity = activities[i];
+                currentActivity.probability = 0;
+                dummyPlace = City.requestAvailablePlace(BuildingType.HOUSE);
+                GetComponent<TravelStatus>().moveAgent(dummyPlace);
+                Vector2 velocity = (dummyPlace.getPlacePosition() - (Vector2)transform.position).normalized * City.getAverageCitySpeed();
+                GetComponent<TravelStatus>().setVelocity(velocity);
+                break;
+            }
+        }
     }
 }

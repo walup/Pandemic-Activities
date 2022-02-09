@@ -6,6 +6,8 @@ public enum PolicyType{
     MASK_WEARING,
     SOCIAL_DISTANCING, 
     VACCINES, 
+    FADING_VACCINES,
+    ISOLATION,
     STOPLIGHT,
     NONE,
 }

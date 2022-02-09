@@ -6,5 +6,6 @@ public enum AgentType
 {
     //El tipo de persona que podemos tener
     LIGHT_AGENT,
-    DATA_SAVER
+    DATA_SAVER,
+    PROBABILITY_SAVER
 }

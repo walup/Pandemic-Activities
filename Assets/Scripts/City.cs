@@ -122,6 +122,27 @@ public class City : MonoBehaviour
         return null;
     }
 
+    public static Place requestAvailablePlaceWithRestriction(BuildingType type, Vector2 currentPosition, bool isolated)
+    {
+        if (!isolated)
+        {
+            return requestAvailablePlace(type);
+        }
+        else
+        {
+            List<Place> places = cityBuildings[type];
+            shuffleArray(places);
+            for(int i = 0; i < places.Count; i++)
+            {
+                if(! places[i].isPlaceFull() && Vector2.Distance(places[i].getPlacePosition(), currentPosition) < StoplightControl.ISOLATION_RADIUS)
+                {
+                    return places[i];
+                }
+            }
+        }
+        return null;
+    }
+
     public static void shuffleArray<T>(List<T> l)
     {
         for(int i = 0; i<l.Count; i++)

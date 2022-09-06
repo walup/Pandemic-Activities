@@ -71,7 +71,7 @@ public class ActivityStatus : MonoBehaviour
                                     BuildingType type = activities[i].getBuildingTypeAccordingToDistribution();
 
                                     //dummyPlace = City.requestAvailablePlace(type);
-                                    dummyPlace = City.requestAvailablePlaceWithRestriction(type, transform.position, protectionStatus.isIsolating());
+                                    dummyPlace = City.requestAvailablePlaceWithRestriction(type, transform.position, protectionStatus.isIsolating(), healthStatus);
                                     if (dummyPlace != null)
                                     {
                                         startActivityHour = Clock.hour;
@@ -104,10 +104,10 @@ public class ActivityStatus : MonoBehaviour
 
                     if (dummyPlace == null && protectionStatus.isIsolating())
                     {
-                        //Repetimos la actividad
-                        startActivityHour = Clock.hour;
-                        doingActivity = true;
-                        currentActivity.probability = 0;
+                            startActivityHour = Clock.hour;
+                            doingActivity = true;
+                            currentActivity.probability = 0;
+                        
                     }
 
                 }
@@ -159,7 +159,7 @@ public class ActivityStatus : MonoBehaviour
                                     BuildingType type = sickActivities[i].getBuildingTypeAccordingToDistribution();
 
                                     //dummyPlace = City.requestAvailablePlace(type);
-                                    dummyPlace = City.requestAvailablePlaceWithRestriction(type, transform.position, protectionStatus.isIsolating());
+                                    dummyPlace = City.requestAvailablePlaceWithRestriction(type, transform.position, protectionStatus.isIsolating(), healthStatus);
                                     if (dummyPlace != null)
                                     {
                                         startActivityHour = Clock.hour;
@@ -273,7 +273,7 @@ public class ActivityStatus : MonoBehaviour
         //Encontramos una actividad que se pueda hacer en casa
         for (int i = 0; i < activities.Count; i++)
         {
-            if (activities[i].doPlaces.Contains(BuildingType.HOUSE))
+            if (activities[i].doPlaces.Contains(BuildingType.HOUSE) && !healthStatus.isSick())
             {
                 startActivityHour = Clock.hour;
                 doingActivity = true;

@@ -11,9 +11,9 @@ public class StoplightControl : MonoBehaviour
     [SerializeField] private Sprite onSprite;
     [SerializeField] private Sprite offSprite;
 
-    public static float OCCUPATION_THRESHOLD = 0.035f;
+    public static float OCCUPATION_THRESHOLD = 0.030f;
     //Dias que estará prendido el semáforo después de que baje la ocupación hospitalaria
-    private int DAYS_STOPLIGHT = 20;
+    private int DAYS_STOPLIGHT = 60;
     private float dayStart;
     private bool endedIsolation = false;
     [SerializeField] public static float ISOLATION_RADIUS = 0;
@@ -30,7 +30,7 @@ public class StoplightControl : MonoBehaviour
     {
         if(stoplightOn && Clock.dayVal - dayStart > DAYS_STOPLIGHT)
         {
-            Debug.Log("Ended isolation");
+            Debug.Log("Ended isolation "+Clock.dayVal);
             this.stoplightOn = false;
             this.endedIsolation = true;
             dayStart = 0;
@@ -58,6 +58,7 @@ public class StoplightControl : MonoBehaviour
 
     public void setDayStart(float dayStart)
     {
+        Debug.Log("Isolation start " + dayStart);
         this.dayStart = dayStart;
     }
 

@@ -7,11 +7,11 @@ public class TravelStatus : MonoBehaviour
     private bool onTheMove;
     private Vector3 destination;
     private Vector3 velocity;
-    private float RADIUS2 =Mathf.Pow(0.9f,2);
+    private float RADIUS2 = Mathf.Pow(1.5f, 2);
+    //private float RADIUS2 =Mathf.Pow(0.9f,2);
     private Place place;
     private bool enteredSick;
-
-
+    private float previousDistanceToPlace;
     void Start()
     {
         onTheMove = false;
@@ -23,8 +23,9 @@ public class TravelStatus : MonoBehaviour
         if (isOnTheMove() && GetComponent<HealthStatus>().isAlive())
         {
             transform.position = transform.position + velocity * Clock.hourDelta;
+            float dst = (transform.position - this.destination).sqrMagnitude;
             //Si ya llegó a su destino el agente 
-            if ((transform.position - this.destination).sqrMagnitude < RADIUS2)
+            if (dst < RADIUS2 || dst > previousDistanceToPlace)
             {
                 //Debug.Log("reached " + transform.position);
                 HealthStatus health = GetComponent<HealthStatus>();
@@ -37,6 +38,7 @@ public class TravelStatus : MonoBehaviour
                 this.place.agentEnterAndRegister(enteredSick, health, protectionStatus);
                 protectionStatus.updateAgentMaskProtection(place.getType(), isOnTheMove());
             }
+            previousDistanceToPlace = dst;
         }
     }
 
@@ -64,9 +66,12 @@ public class TravelStatus : MonoBehaviour
         }
         this.place = place;
         this.destination = place.getPlacePosition();
+        previousDistanceToPlace = float.MaxValue;
         //Debug.Log("New destination " + this.destination);
         setMoving(true);
-        GetComponent<ProtectionStatus>().updateAgentMaskProtection(place.getType(), isOnTheMove());
+        ProtectionStatus protection = GetComponent<ProtectionStatus>();
+        protection.updateAgentMaskProtection(place.getType(), isOnTheMove());
+        
     }
 
     public Place getPlace()

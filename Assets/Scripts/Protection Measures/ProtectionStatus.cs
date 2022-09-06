@@ -22,20 +22,28 @@ public class ProtectionStatus : MonoBehaviour
     private int daysSinceVaccine = 0;
 
     //Distanciamiento social
-    private bool socialDistancing = true;
-    private float distancingRadius;
+    private bool socialDistancingWhileMoving = false;
+    private bool socialDistancingInPlaces = false;
+    private float movingDistancingPercentage = 0.1f;
+    private float insideDistancingPercentage = 1 - 0.3f;
+    private float movingDistancing = 0;
 
     //Aislamiento (semáforo parcial)
     private bool isolating;
 
-
+    //Obediencias
+    private float obedienceMaskWearing = 0;
+    private float obedienceIsolation = 0;
+    private float obedienceSocialDistancing = 0;
 
     // Start is called before the first frame update
     void Start()
     {
-        maskProtectionPercentage = 0;
-        //efficacyForInfection = 0;
-        //efficacyForCriticalInfection = 0;
+
+        GameObject city = GameObject.Find("PopulationGenerator");
+        CityPopulation population = city.GetComponent<CityPopulation>();
+        //Inicializamos los distanciamientos
+        movingDistancing = movingDistancingPercentage * population.getSickRadius();
     }
 
     // Update is called once per frame
@@ -46,8 +54,8 @@ public class ProtectionStatus : MonoBehaviour
             if (scheduledForVaccine && Clock.dayVal == vaccinationDay)
             {
                 nDosesApplied += 1;
-                Debug.Log("Vaccinated nDoses = "+nDosesApplied);
-                if(nDosesApplied == nDosesRequired)
+                Debug.Log("Vaccinated nDoses = " + nDosesApplied);
+                if (nDosesApplied == nDosesRequired)
                 {
                     scheduledForVaccine = false;
                     dayFinalVaccine = (int)Clock.dayVal;
@@ -62,10 +70,15 @@ public class ProtectionStatus : MonoBehaviour
     }
 
 
-       
+
     public void activateMaskWearing()
     {
         this.maskWearingScenario = true;
+    }
+
+    public void turnOffMaskWearing()
+    {
+        this.maskWearingScenario = false;
     }
 
 
@@ -119,13 +132,24 @@ public class ProtectionStatus : MonoBehaviour
 
     public float getMaskProtectionFactor()
     {
-        if (maskWearingScenario)
+        if (!maskWearingScenario || obedienceMaskWearing == 0)
         {
+            return 0;
+        }
+        else if (obedienceMaskWearing == 1) {
+
             return maskProtectionPercentage;
         }
         else
         {
-            return 0;
+            if(Random.value < obedienceMaskWearing)
+            {
+                return 0;
+            }
+            else
+            {
+                return maskProtectionPercentage;
+            }
         }
     }
 
@@ -147,7 +171,7 @@ public class ProtectionStatus : MonoBehaviour
     public void setDosesRequired(int dosesRequired)
     {
         this.nDosesRequired = dosesRequired;
-        if(dosesRequired == 0)
+        if (dosesRequired == 0)
         {
             scheduledForVaccine = false;
             Debug.Log("Not Scheduled for vaccine");
@@ -161,7 +185,6 @@ public class ProtectionStatus : MonoBehaviour
 
     public void setEfficacyForInfection(float efficacy)
     {
-
         this.efficacyForInfection = efficacy;
     }
 
@@ -169,10 +192,10 @@ public class ProtectionStatus : MonoBehaviour
     {
         this.efficacyForCriticalInfection = efficacy;
     }
-        
+
     public float getEfficacyForInfection()
     {
-         return this.efficacyForInfection;
+        return this.efficacyForInfection;
     }
 
     public float getEffectiveEfficacyForInfection()
@@ -213,7 +236,7 @@ public class ProtectionStatus : MonoBehaviour
         }
         else
         {
-            if(dayFinalVaccine > 0)
+            if (dayFinalVaccine > 0)
             {
                 daysSinceVaccine = (int)Clock.dayVal - dayFinalVaccine;
                 if (PolicyMaker.daysForVaccineDissipation > daysSinceVaccine)
@@ -239,7 +262,7 @@ public class ProtectionStatus : MonoBehaviour
     public int getDosesNeeded()
     {
         return nDosesRequired;
-    } 
+    }
 
     public bool isVaccinated()
     {
@@ -258,7 +281,102 @@ public class ProtectionStatus : MonoBehaviour
 
     public bool isIsolating()
     {
-        return this.isolating;
+
+        if (!isolating || obedienceIsolation == 0) {
+            return false;
+
+        }
+        else if(obedienceIsolation == 1)
+        {
+            return true;
+        }
+        else
+        {
+            if(Random.value < obedienceIsolation)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 
-    } 
+
+    public void setSocialDistancingWhileMoving(bool socialDistancingMoving)
+    {
+        this.socialDistancingWhileMoving = socialDistancingMoving;
+    }
+
+    public void setSocialDistancingInPlaces(bool socialDistancingInPlaces)
+    {
+        this.socialDistancingInPlaces = socialDistancingInPlaces;
+    }
+
+    public bool isSocialDistancingMoving()
+    {
+        return socialDistancingWhileMoving;
+    }
+
+    public bool isSocialDistancingInPlaces()
+    {
+        return socialDistancingInPlaces;
+    }
+
+    public float getMovingDistancing()
+    {
+        if (!socialDistancingWhileMoving || obedienceSocialDistancing == 0)
+        {
+            return 0;
+        }
+        else if(obedienceSocialDistancing == 1)
+        {
+            return movingDistancing;
+        }
+        else
+        {
+            if(Random.value > obedienceSocialDistancing)
+            {
+                return 0;
+            }
+            return movingDistancing;
+        }
+    }
+
+    public float getInPlacesDistancingFactor()
+    {
+        if (!socialDistancingInPlaces || obedienceSocialDistancing == 0)
+        {
+            return 1;
+        }
+
+        else if(obedienceSocialDistancing == 1)
+        {
+            return insideDistancingPercentage;
+        }
+
+        else
+        {
+            if(Random.value > obedienceSocialDistancing)
+            {
+                return 1;
+            }
+            return insideDistancingPercentage;
+        }
+    }
+
+
+
+    public void setObedienceMaskWearing(float obedienceMaskWearing)
+    {
+        this.obedienceMaskWearing = obedienceMaskWearing;
+    }
+
+    public void setObedienceIsolation(float obedienceIsolation)
+    {
+        this.obedienceIsolation = obedienceIsolation;
+    }
+
+    public void setObedienceSocialDistancing(float obedienceSocialDistancing)
+    {
+        this.obedienceSocialDistancing = obedienceSocialDistancing;
+    }
+}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using System.Text;
+using System;
 public class PolicyMaker
 {
 
@@ -14,6 +15,7 @@ public class PolicyMaker
     public static float SUSCEPTIBLE_MASK_EFFICACY;
     public static float BOTH_PERSON_MASK_EFFICACY;
 
+    //Vacunación
     public VaccineDistributions vaccineDistributions;
     public VaccinationProgram program = VaccinationProgram.LINEAR;
     public int vaccinationDayStart = 2;
@@ -21,10 +23,21 @@ public class PolicyMaker
     public static int daysBetweenVaccinations;
     public static int daysForVaccineDissipation = 100;
 
-    //Semáforo
+    //Semáforo (aislamiento y política de semáforo)
     public GameObject stoplight;
     public bool stoplightControl;
     public int hospitalCheckHour;
+
+    //Distanciamiento social 
+    public static float REPULSION_RADIUS = 0.1f;
+    //El distanciamiento social comienza ´después de que empieza la simulación
+    //esto ayuda a que no se atasque al principio cuando todos estan moviendose.
+    public static int DAY_START_SOCIAL_DISTANCING = 1;
+    public bool allPoliciesStoplight = false;
+
+    // Semáforo (todas combinadas)
+    public string OBEDIENCE_DISTRIBUTIONS_PATH;
+    public ObedienceStoplightDistributions obedienceDistributions;
 
     public PolicyMaker()
     {
@@ -40,10 +53,15 @@ public class PolicyMaker
         daysBetweenVaccinations = (int)Mathf.Floor(((float)vaccinationDayEnd - (float)vaccinationDayStart) / 4f);
 
 
-        //
+        //Semáforo control
         stoplight = GameObject.Find("Stoplight");
         stoplightControl = false;
         hospitalCheckHour = 0;
+
+        //Distribuciones de obediencia al semáforo
+        OBEDIENCE_DISTRIBUTIONS_PATH = Application.dataPath + "/ProtectionDistributionJSONS/obedience_distributions.json";
+        string obedienceJSONString = File.ReadAllText(OBEDIENCE_DISTRIBUTIONS_PATH);
+        obedienceDistributions = JsonUtility.FromJson<ObedienceStoplightDistributions>(obedienceJSONString);
     }
 
     //Este método va a inicializar los agentes con el tipo de política que 
@@ -55,11 +73,22 @@ public class PolicyMaker
             case PolicyType.MASK_WEARING:
                 for (int j = 0; j < agents.Count; j++)
                 {
-                    agents[j].GetComponent<ProtectionStatus>().activateMaskWearing();
+                    ProtectionStatus protectionStatus = agents[j].GetComponent<ProtectionStatus>();
+                    protectionStatus.activateMaskWearing();
+                    //Todos los agentes obedecen el uso de mascarilla en esta política.
+                    protectionStatus.setObedienceMaskWearing(1);
                 }
                 break;
 
             case PolicyType.SOCIAL_DISTANCING:
+                for (int i = 0; i < agents.Count; i++)
+                {
+                    ProtectionStatus protectionStatus = agents[i].GetComponent<ProtectionStatus>();
+                    protectionStatus.setSocialDistancingWhileMoving(true);
+                    protectionStatus.setSocialDistancingInPlaces(true);
+                    //Todos los agentes obedecen el distancimiento social en esta política
+                    protectionStatus.setObedienceSocialDistancing(1);
+                }
                 break;
 
             case PolicyType.VACCINES:
@@ -68,6 +97,7 @@ public class PolicyMaker
                 int agentsToBeScheduledForVaccine = nAgents;
                 int[] vaccineSchedule = getVaccinationProgram(agentsToBeScheduledForVaccine, vaccinationDayStart, vaccinationDayEnd);
                 ProtectionStatus.setVaccinationScenario(true);
+                ProtectionStatus.setFadingScenario(false);
                 //Configuramos a los que si se vacunaran
                 for (int i = 0; i < agentsToBeScheduledForVaccine; i++)
                 {
@@ -146,10 +176,140 @@ public class PolicyMaker
                 break;
             case PolicyType.ISOLATION:
                 this.stoplightControl = true;
+                //Todos los agentes obedecen el aislamiento en esta política 
+                for(int i = 0; i < agents.Count; i++)
+                {
+                    ProtectionStatus protectionStatus = agents[i].GetComponent<ProtectionStatus>();
+                    protectionStatus.setObedienceIsolation(1);
+                }
+                break;
+
+            case PolicyType.STOPLIGHT:
+                this.allPoliciesStoplight = true;
+                this.stoplightControl = true;
+                //Voy a suponer que todos los agentes obedecen ´tanto el distanciamiento social como
+                //el uso de mascarilla
+                for(int i = 0; i < agents.Count; i++)
+                {
+                    ProtectionStatus protectionStatus = agents[i].GetComponent<ProtectionStatus>();
+                    protectionStatus.activateMaskWearing();
+                    protectionStatus.setSocialDistancingWhileMoving(true);
+                    protectionStatus.setSocialDistancingInPlaces(true);
+                    protectionStatus.setObedienceMaskWearing(1);
+                    protectionStatus.setObedienceSocialDistancing(1);
+                    protectionStatus.setIsolating(false);
+
+
+
+                    float randVal = UnityEngine.Random.value;
+                    float cumSumObedienceIsolation = 0;
+                    int indexObedienceIsolation = 0;
+                    for(int j = 0; j < obedienceDistributions.obedienceIsolationDistribution.Length; j++)
+                    {
+                        if(randVal >= cumSumObedienceIsolation && randVal <= cumSumObedienceIsolation + obedienceDistributions.obedienceIsolationDistribution[j])
+                        {
+                            indexObedienceIsolation = j;
+                            break;
+                        }
+                        cumSumObedienceIsolation = cumSumObedienceIsolation + obedienceDistributions.obedienceIsolationDistribution[j];
+                    }
+
+                    protectionStatus.setObedienceIsolation(obedienceDistributions.obedienceIsolationValues[indexObedienceIsolation]);
+                }
+
 
                 break;
-             case PolicyType.STOPLIGHT:
-                break;
+
+
+
+
+             //case PolicyType.STOPLIGHT:
+                //this.allPoliciesStoplight = true;
+                //this.stoplightControl = true;
+
+                //float randVal = 0;
+                
+                //for(int i = 0; i < agents.Count; i++)
+                //{
+                    //randVal = UnityEngine.Random.value;
+                    //float cumSum = 0;
+                    //int index = 0;
+                    //ProtectionStatus protectionStatus = agents[i].GetComponent<ProtectionStatus>() ;
+
+                    //for(int j = 0; i < obedienceDistributions.obedienceDistribution.Length; j++)
+                    
+                    //{
+                        //if(randVal >= cumSum && randVal <= cumSum + obedienceDistributions.obedienceDistribution[j])
+                        //{
+                            //index = j;
+                            //break;
+                        //}
+                        //cumSum = cumSum + obedienceDistributions.obedienceDistribution[j];
+                    //}
+
+                    //Defina si obedecerán el semáforo
+                    //bool stoplightObedience = Convert.ToBoolean(obedienceDistributions.obedienceValues[index]);
+                    //if (!stoplightObedience)
+                    //{
+                        //protectionStatus.setObedienceIsolation(0);
+                        //protectionStatus.setObedienceMaskWearing(0);
+                        //protectionStatus.setObedienceSocialDistancing(0);
+                    //}
+                    //else
+                    //{
+                        //randVal = UnityEngine.Random.value;
+                        //int indexMask = 0;
+                        //float cumSumMask = 0;
+                        //Obediencia al uso de mascarilla
+                        //for(int j =0; j < obedienceDistributions.obedienceMaskUseDistribution.Length; j++)
+                        //{
+                            //if(randVal >= cumSumMask && randVal <= cumSumMask + obedienceDistributions.obedienceMaskUseDistribution[j])
+                            //{
+                                //indexMask = j;
+                                //break;
+                            //}
+                            //cumSumMask += obedienceDistributions.obedienceMaskUseDistribution[j];
+                        //}
+                        //protectionStatus.setObedienceMaskWearing(obedienceDistributions.obedienceMaskUseValues[indexMask]);
+
+                        //Obediencia al aislamiento
+                        //int indexIsolation = 0;
+                        //float cumSumIsolation = 0;
+                        //randVal = UnityEngine.Random.value;
+                        //for(int j = 0; j < obedienceDistributions.obedienceIsolationDistribution.Length; j++)
+                        //{
+                             //if(randVal >= cumSumIsolation && randVal <= cumSumIsolation + obedienceDistributions.obedienceIsolationDistribution[j])
+                            //{
+                                //indexIsolation = j;
+                                //break;
+                            //}
+                            //cumSumIsolation += obedienceDistributions.obedienceIsolationDistribution[j];
+                        //}
+                        //protectionStatus.setObedienceIsolation(obedienceDistributions.obedienceIsolationDistribution[indexIsolation]);
+
+                        //int indexSocialDistancing = 0;
+                        //float cumSumSocialDistancing = 0;
+
+                        //randVal = UnityEngine.Random.value;
+                        //for(int j = 0; j < obedienceDistributions.obedienceSocialDistancingDistribution.Length; j++)
+                        //{
+                            //if(randVal >= cumSumSocialDistancing && randVal <= cumSumSocialDistancing + obedienceDistributions.obedienceSocialDistancingDistribution[j])
+                            //{
+                                //indexSocialDistancing = j;
+                                //break;
+                            //}
+                            //cumSumSocialDistancing += obedienceDistributions.obedienceSocialDistancingDistribution[j];
+                        //}
+                        //protectionStatus.setObedienceSocialDistancing(obedienceDistributions.obedienceSocialDistancingValues[indexSocialDistancing]);
+
+                        //protectionStatus.activateMaskWearing();
+                        //protectionStatus.setIsolating(true);
+                    //}
+
+
+                //}
+
+                //break;
 
             case PolicyType.NONE:
                 break;
@@ -169,7 +329,7 @@ public class PolicyMaker
             }
             else
             {
-                return 1;
+                return 1.0f;
             }
         }
         else
@@ -184,16 +344,17 @@ public class PolicyMaker
         {
             if (susceptibleProtection.isVaccinated())
             {
+
                 return ((float)susceptibleProtection.getDosesApplied() / (float)susceptibleProtection.getDosesNeeded()) * susceptibleProtection.getEffectiveEfficacyForCriticalInfection();
             }
             else
             {
-                return 1;
+                return 0;
             }
         }
         else
         {
-            return 1;
+            return 0;
         }
     }
 
@@ -203,7 +364,7 @@ public class PolicyMaker
 
     public float getMaskProtectionFactor(ProtectionStatus susceptibleProtection, ProtectionStatus infectedProtection)
     {
-        float diceRoll = Random.value;
+        float diceRoll = UnityEngine.Random.value;
 
         bool firstAgentWearingMask = false;
         bool secondAgentWearingMask = false;
@@ -212,7 +373,7 @@ public class PolicyMaker
             firstAgentWearingMask = true;
         }
 
-        diceRoll = Random.value;
+        diceRoll = UnityEngine.Random.value;
         if(diceRoll <= infectedProtection.getMaskProtectionFactor())
         {
             secondAgentWearingMask = true;
@@ -308,9 +469,46 @@ public class PolicyMaker
         {
             agents[i].GetComponent<ProtectionStatus>().setIsolating(false);
         }
+        //Reiniciamos la bandera stopLightControl para que el semáforo pueda prenderse
+        //de nuevo.
         StoplightControl stoplightControl = stoplight.GetComponent<StoplightControl>();
         stoplightControl.setEndedIsolation(false);
     }
 
+    //Métodos para la política de semáforo
+    public void protectAgents(List<GameObject> agents)
+    {
+        int nAgents = agents.Count;
+        for(int i = 0; i < nAgents; i++)
+        {
+            ProtectionStatus protection = agents[i].GetComponent<ProtectionStatus>();
+            protection.setIsolating(true);
+            //protection.activateMaskWearing();
+            agents[i].GetComponent<ActivityStatus>().goHome();
+        }
+
+        StoplightControl stoplightControl = stoplight.GetComponent<StoplightControl>();
+        stoplightControl.setStopLight(true);
+        stoplightControl.setDayStart(Clock.dayVal);
+
+    }
+
+    public void unProtectAgents(List<GameObject> agents)
+    {
+        int nAgents = agents.Count;
+        for(int i = 0; i < nAgents; i++)
+        {
+            ProtectionStatus protection = agents[i].GetComponent<ProtectionStatus>();
+            protection.setIsolating(false);
+            //protection.turnOffMaskWearing();
+        }
+        StoplightControl stoplightControl = stoplight.GetComponent<StoplightControl>();
+        stoplightControl.setEndedIsolation(false);
+    }
+
+    public bool isAllProtectionPolicy()
+    {
+        return allPoliciesStoplight;
+    }
 
 }

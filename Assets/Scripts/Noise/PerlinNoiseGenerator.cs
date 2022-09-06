@@ -30,7 +30,7 @@ public class PerlinNoiseGenerator : Noise
 
     private float linearInterpolation(float x)
     {
-        float res = x % this.n;
+        x = x % this.n;
         int index = (int)Mathf.Floor(x);
         float alpha = x % 1;
         if(index != this.n - 1)

@@ -11,7 +11,7 @@ public class TimeSeries
     private string timeSeriesName;
     private Color seriesColor;
     //Máximo número de puntos, para no saturar la memoria
-    public static float MAX_POINTS = 500;
+    public static float MAX_POINTS = 2000;
 
     public TimeSeries(string timeSeriesName)
     {

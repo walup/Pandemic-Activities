@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Clock : MonoBehaviour
@@ -20,6 +21,7 @@ public class Clock : MonoBehaviour
     private Sprite[] spriteList;
     private Light sun;
     private bool day;
+    private TextMeshProUGUI text;
     // Start is called before the first frame update
     void Start()
     {
@@ -31,6 +33,13 @@ public class Clock : MonoBehaviour
         hour = 6;
         spriteList = new Sprite[4] { face1Clock, face2Clock, face3Clock, face4Clock};
         dayVal = 0;
+        text = GameObject.Find("day_text").GetComponent<TextMeshProUGUI>();
+
+        if(text == null)
+        {
+            Debug.Log("Was null");
+        }
+
     }
 
     // Update is called once per frame
@@ -54,6 +63,7 @@ public class Clock : MonoBehaviour
             if(hour == 0)
             {
                 dayVal += 1;
+                text.text = "Dia "+dayVal;
             }
 
             if(day && (hour >= 0 && hour <= 6) || (hour >= 22 && hour <= 24))

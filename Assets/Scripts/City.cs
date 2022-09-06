@@ -122,9 +122,9 @@ public class City : MonoBehaviour
         return null;
     }
 
-    public static Place requestAvailablePlaceWithRestriction(BuildingType type, Vector2 currentPosition, bool isolated)
+    public static Place requestAvailablePlaceWithRestriction(BuildingType type, Vector2 currentPosition, bool isolated, HealthStatus health)
     {
-        if (!isolated)
+        if (!isolated || health.isSick())
         {
             return requestAvailablePlace(type);
         }
@@ -134,7 +134,7 @@ public class City : MonoBehaviour
             shuffleArray(places);
             for(int i = 0; i < places.Count; i++)
             {
-                if(! places[i].isPlaceFull() && Vector2.Distance(places[i].getPlacePosition(), currentPosition) < StoplightControl.ISOLATION_RADIUS)
+                if(! places[i].isPlaceFull() && Vector2.Distance(places[i].getPlacePosition(), currentPosition) < StoplightControl.ISOLATION_RADIUS && places[i].getType() != BuildingType.HOSPITAL)
                 {
                     return places[i];
                 }

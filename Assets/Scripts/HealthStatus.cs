@@ -12,10 +12,22 @@ public class HealthStatus : MonoBehaviour
     [SerializeField] private Sprite infectedSprite;
     [SerializeField] private Sprite recoveredSprite;
     [SerializeField] private Sprite deceasedSprite;
+    
 
     private SpriteRenderer renderer;
     // Start is called before the first frame update
     private int nOtherAgentsInfected = 0;
+    private int nDaysRecovered = 0;
+    //Vamos a poner la tasa de perdida de antigenos por dia
+    //private static float mu0 = 3f;
+    //private static float mu0 = 1f;
+    private static float mu0 = 0f;
+    private float immuneLossProbability = 0;
+    private float immunityFactor = 1;
+    //private float saturationPoint = 10;
+    private float saturationPoint = 5;
+
+
 
     void Awake()
     {
@@ -30,7 +42,7 @@ public class HealthStatus : MonoBehaviour
         
     }
 
-    public void updateHealthState(bool contact,float alpha, float beta, float beta1, float gamma, float gamma1, float omega, float omega1, float omega2)
+    public void updateHealthState(bool contact,float alpha, float beta, float beta1, float gamma, float gamma1, float omega, float omega1, float omega2, float nInfected)
     {
         switch (healthState)
         {
@@ -75,6 +87,12 @@ public class HealthStatus : MonoBehaviour
                         this.healthState = HealthState.SUSCEPTIBLE;
                         renderer.sprite = susceptibleSprite;
                     }
+
+                    //Si estamos en el escenario de aislamiento, y el agente se acaba de curar en el hospital, le ordenaremos que vaya a su casa 
+                    if(GetComponent<ProtectionStatus>().isIsolating() && GetComponent<TravelStatus>().getPlace().getType() == BuildingType.HOSPITAL)
+                    {
+                        GetComponent<ActivityStatus>().goHome();
+                    }
                 }
                 break;
 
@@ -84,22 +102,49 @@ public class HealthStatus : MonoBehaviour
                 {
 
                     symptomaticThrow = Random.value;
-                    if(symptomaticThrow < omega1)
-                    {
-                        this.healthState = HealthState.RECOVERED;
-                        renderer.sprite = recoveredSprite;
-                    }
-                    else if (symptomaticThrow >= omega1 && symptomaticThrow <omega1 + omega2 )
+
+
+                    if(symptomaticThrow < omega2 * immunityFactor)
                     {
                         this.healthState = HealthState.DEAD;
                         renderer.sprite = deceasedSprite;
+                    }
+
+                    else if(symptomaticThrow >= omega2*immunityFactor && symptomaticThrow < omega1 + omega2 * immunityFactor)
+                    {
+                        this.healthState = HealthState.RECOVERED;
+                        renderer.sprite = recoveredSprite;
+
+                        if (GetComponent<ProtectionStatus>().isIsolating())
+                        {
+                            GetComponent<ActivityStatus>().goHome();
+                        }
                     }
                     else
                     {
                         this.healthState = HealthState.SUSCEPTIBLE;
                         renderer.sprite = susceptibleSprite;
+                        if(GetComponent<ProtectionStatus>().isIsolating())
+                        {
+                            GetComponent<ActivityStatus>().goHome();
+                        }
                     }
                 }
+                break;
+
+            case HealthState.RECOVERED:
+                //immuneLossProbability = nInfected * (mu0 / (saturationPoint + nInfected)) * (1 / 24f) * Clock.hourDelta;
+                immuneLossProbability = ((Mathf.Pow(nInfected, 2)) * mu0/(saturationPoint + nInfected))*(1/24f)*Clock.hourDelta;
+                float recoveredThrow = Random.value;
+                if(recoveredThrow < immuneLossProbability)
+                {
+                    immuneLossProbability = 0;
+                    immunityFactor = immunityFactor * 0.5f;
+                    this.healthState = HealthState.SUSCEPTIBLE;
+                    renderer.sprite = susceptibleSprite;
+                    
+                }
+
                 break;
             
         }

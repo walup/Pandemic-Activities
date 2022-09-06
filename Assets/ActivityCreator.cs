@@ -278,7 +278,7 @@ public class ActivityCreator : MonoBehaviour
         exerciseSick.name = "Exercise";
         //Distribución de frecuencia
         float[] freqValsExerciseSick = { 0, 1, 2, 3, 4, 5, 6, 7 };
-        float[] freqDistExerciseSick = { 0.8f, 0.1f, 0.05f, 0.05f, 0, 0, 0, 0 };
+        float[] freqDistExerciseSick = { 0.95f, 0.025f, 0.025f, 0, 0, 0, 0, 0 };
         exerciseSick.frequencyValues = freqValsExerciseSick;
         exerciseSick.frequencyDistribution = freqDistExerciseSick;
         exerciseSick.frequencyBinSize = 1;
@@ -306,7 +306,7 @@ public class ActivityCreator : MonoBehaviour
         eatSick.name = "Eat";
         //Distribución de frecuencia
         float[] freqValsEatSick = { 1, 2, 3, 4, 5 };
-        float[] freqDistEatSick = { 0.4f, 0.4f, 0.2f, 0, 0f };
+        float[] freqDistEatSick = { 0.0086f, 0.1565f, 0.6869f, 0.1478f, 0f };
         eatSick.frequencyValues = freqValsEatSick;
         eatSick.frequencyDistribution = freqDistEatSick;
         eatSick.frequencyBinSize = 1;
@@ -335,7 +335,7 @@ public class ActivityCreator : MonoBehaviour
         buyFoodSick.name = "Buy Food";
         //Distribución de frecuencia
         float[] freqValsBuyFoodSick = { 1, 2, 3, 4, 5, 6 };
-        float[] freqDistBuyFoodSick = { 0.1f, 0.1f, 0.5f, 0.1f, 0.1f, 0 };
+        float[] freqDistBuyFoodSick = { 0.1f, 0.5f, 0.1f, 0.1f, 0.1f, 0 };
         buyFoodSick.frequencyValues = freqValsBuyFoodSick;
         buyFoodSick.frequencyDistribution = freqDistBuyFoodSick;
         buyFoodSick.frequencyBinSize = 1;
@@ -361,7 +361,7 @@ public class ActivityCreator : MonoBehaviour
         socializeSick.name = "Socialize";
         //Distribución de frecuencia
         float[] freqValsSocializeSick = { 0, 1, 2, 3, 4, 5, 6 };
-        float[] freqDistSocializeSick = { 0.7f, 0.2f, 0.1f, 0, 0, 0, 0 };
+        float[] freqDistSocializeSick = { 0.9f, 0.1f, 0.1f, 0, 0, 0, 0 };
         socializeSick.frequencyValues = freqValsSocializeSick;
         socializeSick.frequencyDistribution = freqDistSocializeSick;
         socializeSick.frequencyBinSize = 1;

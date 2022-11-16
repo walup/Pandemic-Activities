@@ -27,11 +27,12 @@ public class ProbabilitySaver : MonoBehaviour
                 ActivityStatus activityStatus = GetComponent<ActivityStatus>();
                 Activity workActivity = activityStatus.getHealthyNamedActivity("Work");
                 Activity exerciseActivity = activityStatus.getHealthyNamedActivity("Exercise");
+                Activity eatActivity = activityStatus.getHealthyNamedActivity("Eat");
 
 
                 if (workActivity != null && exerciseActivity!= null)
                 {
-                    builder.AppendLine(getFormattedPoint5D(Clock.hour, workActivity.getProbability(), exerciseActivity.getProbability(), workActivity.getProbabilityDelta(), exerciseActivity.getProbabilityDelta()));
+                    builder.AppendLine(getFormattedPoint5D(Clock.hour, workActivity.getProbability(), eatActivity.getProbability(), workActivity.getProbabilityDelta(), eatActivity.getProbabilityDelta()));
                 }
             }
         }

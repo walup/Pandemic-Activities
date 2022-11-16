@@ -20,13 +20,20 @@ public class HealthStatus : MonoBehaviour
     private int nDaysRecovered = 0;
     //Vamos a poner la tasa de perdida de antigenos por dia
     //private static float mu0 = 3f;
-    //private static float mu0 = 1f;
     private static float mu0 = 0f;
+    //private static float mu0 = 3f;
     private float immuneLossProbability = 0;
     private float immunityFactor = 1;
-    //private float saturationPoint = 10;
-    private float saturationPoint = 5;
+    //private float saturationPoint = 7f;
+    private float saturationPoint = 20f;
+    //private float saturationPoint = 5;
 
+    // 7 y 3 normal 
+    // 15 y 1.5 aislamiento
+    // 15 y 3 distanciamiento social  
+    // 15 y 1 vacunación
+    // 15 y 3 Mascarilla 
+    // 20 y 1 Semáforo 
 
 
     void Awake()

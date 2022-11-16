@@ -6,7 +6,7 @@ using System.Text;
 public class CityPopulation : MonoBehaviour
 {
     private List<GameObject> agents;
-    [SerializeField] private float portionLightAgents = 0.95f;
+    [SerializeField] private float portionLightAgents = 1f;
     private AgentFactory agentFactory;
     private City city;
     private int nAgents;
